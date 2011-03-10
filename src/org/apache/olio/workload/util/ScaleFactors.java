@@ -44,12 +44,12 @@ public class ScaleFactors {
      * @param userCount
      */
     public static void setActiveUsers(int userCount) {
-        if (userCount < 25) {
-            logger.warning("Trying to load for " + userCount + " concurrent " +
-                    "users which is below the minimum of 25 users. " +
-                    "Adjusting to 25 users");
-            userCount = 25;
-        }
+//      if (userCount < 25) {
+//          logger.warning("Trying to load for " + userCount + " concurrent " +
+//                  "users which is below the minimum of 25 users. " +
+//                  "Adjusting to 25 users");
+//          userCount = 25;
+//      }
         if (activeUsers == -1) {
             activeUsers = userCount;
             users = activeUsers * USERS_RATIO;
