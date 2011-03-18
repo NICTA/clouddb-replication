@@ -323,16 +323,21 @@ public class UIDriver {
         if (!resourcePath.endsWith(File.separator)) {
             resourcePath += File.separator;
         }
-        // eventImg = new File(resourcePath + "event.jpg");
+
+        //No image uploading, also removed params.add(new FilePart())
+        //from AddPerson and AddEvent on 18.03.2011
+        /*
+        eventImg = new File(resourcePath + "event.jpg");
         // logger.info("eventImg: " + eventImg);
-        // eventThumb = new File(resourcePath + "event_thumb.jpg");
+        eventThumb = new File(resourcePath + "event_thumb.jpg");
         // logger.info("eventThumb: " + eventThumb);
-        // eventPdf = new File(resourcePath + "event.pdf");
+        eventPdf = new File(resourcePath + "event.pdf");
         // logger.info("eventPdf: " + eventPdf);
-        // personImg = new File(resourcePath + "person.jpg");
+        personImg = new File(resourcePath + "person.jpg");
         // logger.info("personImg: " + personImg);
-        // personThumb = new File(resourcePath + "person_thumb.jpg");
+        personThumb = new File(resourcePath + "person_thumb.jpg");
         // logger.info("personThumb: " + personThumb);
+        */
 
         int bucket = Utilities.selectBucket(ctx.getThreadId(),
                 ctx.getClientsInDriver(), hostPortList.size());
@@ -534,9 +539,11 @@ public class UIDriver {
         params.add(new NullContentTypePart("address[zip]", addressArr[4]));
         params.add(new NullContentTypePart("address[country]", addressArr[5]));
 
-        //params.add(new FilePart("event_image", eventImg, "image/jpeg", null));
-        //params.add(new FilePart("event_document", eventPdf, "application/pdf",
-        //           null));
+        /*
+        params.add(new FilePart("event_image", eventImg, "image/jpeg", null));
+        params.add(new FilePart("event_document", eventPdf, "application/pdf",
+                   null));
+        */
         params.add(new NullContentTypePart("commit", "Create"));
 
         // GET the new event form within a user session
@@ -597,7 +604,10 @@ public class UIDriver {
             logger.finer("addPerson adding user: " + parameters[0]);
         }
         params.add(new NullContentTypePart("user[username]", parameters[0]));
+        // No name check
+        /*
         http.readURL(checkNameURL, "name=" + parameters[0]);
+        */
 
         params.add(new NullContentTypePart("user[password]", parameters[1]));
         params.add(new NullContentTypePart("user[password_confirmation]",
@@ -615,7 +625,9 @@ public class UIDriver {
         params.add(new NullContentTypePart("user[telephone]", parameters[5]));
         params.add(new NullContentTypePart("user[timezone]", parameters[7]));
         params.add(new NullContentTypePart("user[summary]", parameters[6]));
-        //params.add(new FilePart("user_image", personImg, "image/jpeg", null));
+        /*
+        params.add(new FilePart("user_image", personImg, "image/jpeg", null));
+        */
 
         http.readURL(addPersonURL);
         loadStatics(addPersonStatics);
