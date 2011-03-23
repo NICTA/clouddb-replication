@@ -26,7 +26,6 @@ import com.sun.faban.harness.DefaultFabanBenchmark2;
 
 import com.sun.faban.harness.PreRun;
 import java.util.ArrayList;
-import java.util.logging.Logger;
 
 import static com.sun.faban.harness.RunContext.*;
 
@@ -36,8 +35,6 @@ import static com.sun.faban.harness.RunContext.*;
  */
 public class OlioBenchmark extends DefaultFabanBenchmark2 {
 
-    static Logger logger = Logger.getLogger(
-            OlioBenchmark.class.getName());
     int totalRunningTimeInSecs = 0;
 
     /**
@@ -51,32 +48,20 @@ public class OlioBenchmark extends DefaultFabanBenchmark2 {
 
         params = getParamRepository();
 
-        //Obtaining configuration parameters
-        //String webserverType = params.getParameter("webServer/type");
-
         String[] dbhosts = params.getParameter(
                 "dbServer/fa:hostConfig/fa:host").split(" ");
 
         // Reloading database and media as necessary.
         boolean reloadDB = Boolean.parseBoolean(
                 params.getParameter("dbServer/reloadDB"));
-        boolean reloadMedia = Boolean.parseBoolean(
-                params.getParameter("dataStorage/reloadMedia"));
 
         int scale = -1;
-        if (reloadDB || reloadMedia) {
+        if (reloadDB) {
             scale = Integer.parseInt(params.getParameter("dbServer/scale"));
         }
 
         CommandHandle dbHandle = null;
-        CommandHandle mediaHandle = null;
         if (reloadDB) {
-            // We need to restart the appservers
-            boolean restartApp = Boolean.parseBoolean(
-                    params.getParameter("webServer/fh:service/fh:restart"));
-            if (!restartApp)
-                params.setParameter("webServer/fh:service/fh:restart", "true");
-            logger.info("Reloading the database for " + scale + " users!");
             String dbhost = dbhosts[0];
             String driver = params.getParameter("dbServer/dbDriver");
             String connectURL = params.getParameter("dbServer/connectURL");
@@ -94,31 +79,11 @@ public class OlioBenchmark extends DefaultFabanBenchmark2 {
             dbHandle = java(dbhost, c);
         }
 
-        if (reloadMedia) {
-            logger.info("Reloading images/media for " + scale + " users!");
-            String mediaHost = params.getParameter(
-                    "dataStorage/fa:hostConfig/fa:host");
-            String mediaDir = params.getParameter("dataStorage/mediaDir");
-            Command c = new Command("org.apache.olio.workload.fsloader.FileLoader",
-                    getBenchmarkDir() + "resources", mediaDir,
-                    String.valueOf(scale));
-            c.setSynchronous(false);
-            mediaHandle = java(mediaHost, c);
-        }
-
         if (dbHandle != null) {
             dbHandle.waitFor();
             int exitValue = dbHandle.exitValue();
             if (exitValue != 0) {
                 throw (new Exception("DB load error, exited with value " + exitValue));
-            }
-        }
-
-        if (mediaHandle != null) {
-            mediaHandle.waitFor();
-            int exitValue = mediaHandle.exitValue();
-            if (exitValue != 0) {
-                throw (new Exception("File load error, exited with value " + exitValue));
             }
         }
 

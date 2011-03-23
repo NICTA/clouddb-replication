@@ -17,7 +17,7 @@
  * 
 -->
 
-<project name="Olio Rails Workload" default="deploy.jar" basedir=".">
+<project name="Olio Database Workload" default="deploy.jar" basedir=".">
 
     <property file="build.properties"/>
     <property name="src.dir" value="src"/>

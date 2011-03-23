@@ -22,11 +22,12 @@ import com.sun.faban.driver.util.Random;
 
 import java.io.FileReader;
 import java.util.HashSet;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class RandomUtil {
 
-    public static final String[] TIMEZONES = { "ACT", "AET", "AGT", "ART",
+    public static final String[] TIMEZONES = {"ACT", "AET", "AGT", "ART",
         "AST", "Africa/Abidjan", "Africa/Accra", "Africa/Addis_Ababa",
         "Africa/Algiers", "Africa/Asmera", "Africa/Bamako", "Africa/Bangui",
         "Africa/Banjul", "Africa/Bissau", "Africa/Blantyre",
@@ -191,7 +192,6 @@ public class RandomUtil {
         "US/Pacific", "US/Pacific-New", "US/Samoa", "UTC", "Universal", "VST",
         "W-SU", "WET", "Zulu"};
 
-
     // Phone is 0018889990000 or 0077669990000 for non-US (no spaces for Rails app)
     // 50% of the time, do US, 50% non-us.
     public static String randomPhone(Random r, StringBuilder b) {
@@ -217,9 +217,10 @@ public class RandomUtil {
     }
 
     public static StringBuilder randomName(Random r, StringBuilder b,
-                                           int minLength, int maxLength) {
-        if (minLength < 1 || maxLength < minLength)
+            int minLength, int maxLength) {
+        if (minLength < 1 || maxLength < minLength) {
             throw new IllegalArgumentException();
+        }
         b.append(r.makeCString(1, 1).toUpperCase());
         b.append(r.makeCString(minLength - 1, maxLength - 1).toLowerCase());
         return b;
@@ -251,12 +252,13 @@ public class RandomUtil {
 
         do {
             double x = r.drandom(0.0, 1.0);
-            if (x == 0)
+            if (x == 0) {
                 x = 0.05;
+            }
 
             // We use a negative exponential distribution to select the tags.
             // The first tags tend to be the most often used.
-            selected = (int)(mean * -Math.log(x));
+            selected = (int) (mean * -Math.log(x));
 
             // if (selected >= ScaleFactors.tagCount)
             //    logger.warning("Selected: " + selected);
@@ -265,9 +267,10 @@ public class RandomUtil {
             // We redo the selection instead.
         } while (selected >= ScaleFactors.tagCount && loops++ < 10);
 
-        if (loops >= 10)
-            logger.severe("Exceeded loop limit. Selected:" +
-                            selected + " TagCount: " + ScaleFactors.tagCount);
+        if (loops >= 10) {
+            logger.severe("Exceeded loop limit. Selected:"
+                    + selected + " TagCount: " + ScaleFactors.tagCount);
+        }
 
         // We use the user name mechanism to create the tag names
         return ++selected;
@@ -302,49 +305,14 @@ public class RandomUtil {
     /**
      * Randomly selects an event from the events page.
      * @param r The random value generator
-     * @param eventListPage The page from the response buffer
+     * @param eventIds The list of event ids from the database
      * @return The selected event id, as a string
      */
-    public static String randomEvent(Random r, StringBuilder eventListPage) {
-        String search1 = "<a href=\"/events/";
-        int idx = 0;
-        HashSet<String> eventIdSet = new HashSet<String>();
-        String eventItem = "";
-        for (;;) {
-            idx = eventListPage.indexOf(search1, idx);
-            if (idx == -1)
-                break;
-            // We skip this the php or jsp, just knowing it is 3 chars
-            idx += search1.length();
-            int endIdx = eventListPage.indexOf("\"", idx);
-            if (endIdx == -1)
-                break;
-
-            eventItem = eventListPage.substring(idx, endIdx).trim();
-            if (!eventItem.contains("tagged") && !eventItem.contains("new") )
-            eventIdSet.add(eventListPage.substring(idx, endIdx).trim());
-            idx = endIdx;
-        }
-        int size = eventIdSet.size();
-        if (size == 0)
+    public static String randomEvent(Random r, List<String> eventIds) {
+        if (eventIds.isEmpty()) {
             return null;
-
-        String[] eventIds = new String[size];
-        eventIds = eventIdSet.toArray(eventIds);
-        return eventIds[r.random(0, size - 1)];
-    }
-
-    // Main for testing RandomEvent.
-    public static void main(String[] args) throws Exception {
-        FileReader reader = new FileReader(args[0]);
-        StringBuilder page = new StringBuilder();
-        char[] readBuffer = new char[8192];
-        int readSize;
-        while ((readSize = reader.read(readBuffer, 0, readBuffer.length))
-                != -1)
-            page.append(readBuffer, 0, readSize);
-        Random r = new Random();
-        String selected = randomEvent(r, page);
-        System.out.println("Selected: " + selected);
+        }
+        int size = eventIds.size();
+        return eventIds.get(r.random(0, size - 1));
     }
 }
