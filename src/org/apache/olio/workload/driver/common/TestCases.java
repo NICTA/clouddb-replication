@@ -66,12 +66,10 @@ public class TestCases {
         // Test EventDetail
         EventDetail eventDetail = new EventDetail(dbReadConn, "12");
         eventDetail.execute();
-      
+
         // Test AddAttendee
-        if (new AddAttendee(dbReadConn, "12", 1).canAddAttendee()) {
-            AddAttendee addAttendee = new AddAttendee(dbWriteConn, "12", 1);
-            addAttendee.execute();
-        }
+        AddAttendee addAttendee = new AddAttendee(dbWriteConn, "12", 1);
+        addAttendee.execute();
 
         // Test PersonDetail
         PersonDetail personDetail = new PersonDetail(dbReadConn, 20);

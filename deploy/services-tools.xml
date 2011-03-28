@@ -14,4 +14,7 @@
     <tool id="Mysqlstats" service="MySQLService">
         <class>com.sun.tools.Mysqlstats</class>
     </tool>
+    <tool id="Mysqlheartbeat" service="MySQLService">
+        <class>com.sun.tools.Mysqlheartbeat</class>
+    </tool>
 </services-tools>

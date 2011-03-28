@@ -86,13 +86,15 @@
         <scale>50</scale>
         <fh:service xmlns:fh="http://faban.sunsource.net/ns/fabanharness">
             <fh:name>MySQLService</fh:name>
-            <fh:tools>Mysqlstats</fh:tools>
+            <fh:tools>Mysqlstats; Mysqlheartbeat</fh:tools>
             <fh:restart>false</fh:restart>
             <fh:config>
                 <serverHome>/var/mysql</serverHome>
                 <user>olio</user>
                 <password>olio</password>
                 <confPath>/etc/my.cnf</confPath>
+                <interval-read>100</interval-read>
+                <interval-write>500</interval-write>
              </fh:config>
         </fh:service>
     </dbServer>

@@ -36,7 +36,6 @@ public class AddAttendee implements Operatable {
     private Integer userId = 0;
     // Output
     private Boolean success = false;
-    private Boolean usersEventExisted = true;
 
     public AddAttendee(DBConnectionFactory dbConn, String eventId, Integer userId) {
         this.conn = dbConn.createConnection();
@@ -56,7 +55,10 @@ public class AddAttendee implements Operatable {
     public void execute() {
         prepare();
         try {
-            if (!usersEventExisted) {
+            selectUsersStmt.setInt(1, userId);
+            selectUsersStmt.setInt(2, eventId);
+            ResultSet selectUsers2ResultSet = selectUsersStmt.executeQuery();
+            if (!selectUsers2ResultSet.next()) {
                 insertEventsUsersStmt.setInt(1, eventId);
                 insertEventsUsersStmt.setInt(2, userId);
                 insertEventsUsersStmt.executeUpdate();
@@ -68,22 +70,6 @@ public class AddAttendee implements Operatable {
             Logger.getLogger(AddAttendee.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }
         cleanup();
-    }
-
-    public Boolean canAddAttendee() {
-        prepare();
-        try {
-            selectUsersStmt.setInt(1, userId);
-            selectUsersStmt.setInt(2, eventId);
-            ResultSet selectUsers2ResultSet = selectUsersStmt.executeQuery();
-            if (!selectUsers2ResultSet.next()) {
-                usersEventExisted = false;
-            }
-        } catch (SQLException ex) {
-            Logger.getLogger(AddAttendee.class.getName()).log(Level.SEVERE, null, ex.getMessage());
-        }
-        cleanup();
-        return !usersEventExisted;
     }
 
     public void cleanup() {
