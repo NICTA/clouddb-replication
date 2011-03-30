@@ -24,6 +24,7 @@ import org.apache.olio.workload.util.RandomUtil;
 import org.apache.olio.workload.util.ScaleFactors;
 import org.apache.olio.workload.util.UserName;
 import org.apache.olio.workload.driver.common.*;
+import org.apache.olio.workload.driver.common.Message.MESSAGE;
 import org.apache.olio.workload.driver.operations.*;
 
 import java.io.IOException;
@@ -206,8 +207,9 @@ public class UIDriver {
             addEvent.execute();
             ctx.pauseTime();
 
-            if (!addEvent.getSuccess()) {
-                throw new Exception("Could not doAddEvent() successfully.");
+            MESSAGE message = addEvent.getSuccess();
+            if (message != MESSAGE.COMMITTED) {
+                throw new Exception(message.getMessage());
             }
         }
     }
@@ -236,8 +238,9 @@ public class UIDriver {
             addPerson.execute();
             ctx.pauseTime();
 
-            if (!addPerson.getSuccess()) {
-                throw new Exception("Could not doAddPerson() successfully.");
+            MESSAGE message = addPerson.getSuccess();
+            if (message != MESSAGE.COMMITTED) {
+                throw new Exception(message.getMessage());
             }
         }
     }

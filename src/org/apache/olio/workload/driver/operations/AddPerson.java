@@ -13,6 +13,7 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.olio.workload.driver.common.DBConnectionFactory;
+import org.apache.olio.workload.driver.common.Message.MESSAGE;
 import org.apache.olio.workload.driver.common.Operatable;
 
 /**
@@ -63,7 +64,7 @@ public class AddPerson implements Operatable {
     private String[] addressArr = null;
     private Integer threadId = -1;
     // Output
-    private boolean success = false;
+    private MESSAGE message = null;
 
     public AddPerson(DBConnectionFactory dbConn, String[] parameters,
             String[] addressArr, int threadId) {
@@ -134,6 +135,7 @@ public class AddPerson implements Operatable {
             ResultSet selectUsersResultSet = selectUsersStmt.executeQuery();
             if (selectUsersResultSet.next()) {
                 userExisted = true;
+                message = MESSAGE.EXISTED;
             }
 
             if (!userExisted) {
@@ -152,21 +154,22 @@ public class AddPerson implements Operatable {
                 insertUsersStmt.executeUpdate();
 
                 conn.commit();
-                success = true;
+                message = MESSAGE.COMMITTED;
             }
         } catch (SQLException ex) {
-            Logger.getLogger(AddPerson.class.getName()).log(Level.SEVERE, null, ex.getMessage());
             try {
                 conn.rollback();
+                message = MESSAGE.ROLLBACKED;
             } catch (SQLException ex1) {
                 Logger.getLogger(AddPerson.class.getName()).log(Level.SEVERE, null, ex1.getMessage());
             }
+            Logger.getLogger(AddPerson.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }
         cleanup();
     }
 
-    public boolean getSuccess() {
-        return success;
+    public MESSAGE getSuccess() {
+        return message;
     }
 
     public void cleanup() {
