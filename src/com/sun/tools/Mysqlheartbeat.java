@@ -219,6 +219,7 @@ public class Mysqlheartbeat {
             if (!results.isEmpty()) {
                 bufferWriter.write("===========================================================\n");
                 bufferWriter.write("master time,\t\tslave time,\t\ttime diff\n");
+                Collections.sort(results);
                 for (MysqlheartbeatBean mhb : results) {
                     bufferWriter.write(String.valueOf(mhb.getMaster()) + ",\t\t"
                             + String.valueOf(mhb.getSlave()) + ",\t\t"
@@ -232,10 +233,10 @@ public class Mysqlheartbeat {
         }
     }
 
-    private class MysqlheartbeatBean {
+    private class MysqlheartbeatBean implements Comparable<MysqlheartbeatBean> {
 
-        private long master;
-        private long slave;
+        private Long master;
+        private Long slave;
 
         public MysqlheartbeatBean(long master, long slave) {
             this.master = master;
@@ -248,6 +249,15 @@ public class Mysqlheartbeat {
 
         public long getSlave() {
             return slave;
+        }
+
+        public int compareTo(MysqlheartbeatBean t) {
+            if (this.master != t.master) {
+                return this.master.compareTo(t.master);
+            }
+            else {
+                return this.slave.compareTo(t.slave);
+            }
         }
     }
 }
