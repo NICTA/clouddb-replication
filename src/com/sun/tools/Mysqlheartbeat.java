@@ -39,6 +39,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,11 +56,11 @@ public class Mysqlheartbeat {
     @Context
     public ToolContext ctx;
     // Strings
-    private static final String SHOW_SLAVE = "SHOW SLAVE STATUS";
-    private static final String INSERT_HEARTBEATS = "INSERT INTO "
-            + "heartbeats(master_time) VALUES (?)";
+    private static final String SHOW_SLAVE = "SHOW SLAVE STATUS;";
+    private static final String INSERT_HEARTBEATS = "SET SESSION binlog_format = 'STATEMENT'; "
+            + "INSERT INTO heartbeats(sys_mill, db_micro) VALUES (?, now_microsec());";
     private static final String SELECT_HEARTBEATS = "SELECT * FROM heartbeats "
-            + "ORDER BY master_time DESC LIMIT 1";
+            + "ORDER BY sys_mill DESC;";
     // Statements
     private PreparedStatement showSlaveStmt = null;
     private PreparedStatement insertHeartbeatsStmt = null;
@@ -70,6 +71,10 @@ public class Mysqlheartbeat {
     private Integer intervalRead, intervalWrite;
     private Boolean isMaster = false;
     private Boolean runningFlag = true;
+    private SimpleDateFormat millisFormat =
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS000");
+    private SimpleDateFormat microsFormat =
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
     // Output
     private List<MysqlheartbeatBean> results = new LinkedList<MysqlheartbeatBean>();
     private Integer queryCount = 0;
@@ -88,17 +93,17 @@ public class Mysqlheartbeat {
         if (serverPassword == null || serverPassword.trim().length() <= 0) {
             throw new ConfigurationException("MySQL serverPassword property is not provided");
         }
-        intervalRead = Integer.valueOf(ctx.getServiceProperty("interval-read"));
-        if (intervalRead == null || intervalRead == 0) {
-            throw new ConfigurationException("MySQL intervalRead property is not provided");
-        }
+//        intervalRead = Integer.valueOf(ctx.getServiceProperty("interval-read"));
+//        if (intervalRead == null || intervalRead == 0) {
+//            throw new ConfigurationException("MySQL intervalRead property is not provided");
+//        }
         intervalWrite = Integer.valueOf(ctx.getServiceProperty("interval-write"));
         if (intervalWrite == null || intervalWrite == 0) {
             throw new ConfigurationException("MySQL intervalWrite property is not provided");
         }
 
         String mysqlDb = "heartbeats";
-        String url = String.format("jdbc:mysql://%s/%s?user=%s&password=%s",
+        String url = String.format("jdbc:mysql://%s/%s?user=%s&password=%s&allowMultiQueries=true",
                 "localhost", mysqlDb, serverUser, serverPassword);
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
@@ -139,7 +144,8 @@ public class Mysqlheartbeat {
                 public void run() {
                     while (runningFlag == true) {
                         try {
-                            insertHeartbeatsStmt.setLong(1, System.currentTimeMillis());
+                            insertHeartbeatsStmt.setString(1,
+                                    millisFormat.format(System.currentTimeMillis()));
                             insertHeartbeatsStmt.executeUpdate();
                             queryCount++;
                             Thread.sleep(intervalWrite);
@@ -151,31 +157,6 @@ public class Mysqlheartbeat {
                 }
             });
             writeThread.start();
-        } else {
-            logger.fine(toolName + " Started with SELECT" + " in start method");
-            Thread readThread = new Thread(new Runnable() {
-
-                public void run() {
-                    while (runningFlag == true) {
-                        try {
-                            ResultSet selectHeartbeatsResultSet =
-                                    selectHeartbeatsStmt.executeQuery();
-                            if (selectHeartbeatsResultSet.next()) {
-                                results.add(
-                                        new MysqlheartbeatBean(
-                                        selectHeartbeatsResultSet.getLong("master_time"),
-                                        System.currentTimeMillis()));
-                            }
-                            queryCount++;
-                            Thread.sleep(intervalRead);
-                        } catch (Exception ex) {
-                            Logger.getLogger(Mysqlheartbeat.class.getName()).log(
-                                    Level.SEVERE, null, ex.getMessage());
-                        }
-                    }
-                }
-            });
-            readThread.start();
         }
     }
 
@@ -186,6 +167,22 @@ public class Mysqlheartbeat {
     public void stop() throws IOException, InterruptedException {
         logger.fine("Stopping tool " + toolName);
         runningFlag = false;
+        logger.fine(toolName + " Started with SELECT" + " in start method");
+        try {
+            ResultSet selectHeartbeatsResultSet =
+                    selectHeartbeatsStmt.executeQuery();
+            while (selectHeartbeatsResultSet.next()) {
+                results.add(
+                        new MysqlheartbeatBean(
+                        microsFormat.parse(
+                        selectHeartbeatsResultSet.getString("sys_mill")).getTime(),
+                        microsFormat.parse(
+                        selectHeartbeatsResultSet.getString("db_micro")).getTime()));
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Mysqlheartbeat.class.getName()).log(
+                    Level.SEVERE, null, ex.getMessage());
+        }
         try {
             if (!showSlaveStmt.isClosed()) {
                 showSlaveStmt.close();
@@ -209,21 +206,14 @@ public class Mysqlheartbeat {
     public void getReport() {
         try {
             BufferedWriter bufferWriter = new BufferedWriter(new FileWriter(logfile, true));
-            if (isMaster) {
-                bufferWriter.write("Number of writes: \t" + queryCount + "\n");
-                bufferWriter.write("Interval of writes: \t" + intervalWrite + "\n");
-            } else {
-                bufferWriter.write("Number of reads: \t" + queryCount + "\n");
-                bufferWriter.write("Interval of reads: \t" + intervalRead + "\n");
-            }
             if (!results.isEmpty()) {
                 bufferWriter.write("===========================================================\n");
-                bufferWriter.write("master time,\t\tslave time,\t\ttime diff\n");
+                bufferWriter.write("sys_milli,\t\tdb_micro,\t\ttime_diff\n");
                 Collections.sort(results);
                 for (MysqlheartbeatBean mhb : results) {
-                    bufferWriter.write(String.valueOf(mhb.getMaster()) + ",\t\t"
-                            + String.valueOf(mhb.getSlave()) + ",\t\t"
-                            + String.valueOf(mhb.getSlave() - mhb.getMaster()) + "\n");
+                    bufferWriter.write(String.valueOf(mhb.getSysMilli()) + ",\t\t"
+                            + String.valueOf(mhb.getDbMicro()) + ",\t\t"
+                            + String.valueOf(mhb.getDbMicro() - mhb.getSysMilli()) + "\n");
                 }
             }
             bufferWriter.flush();
@@ -235,28 +225,27 @@ public class Mysqlheartbeat {
 
     private class MysqlheartbeatBean implements Comparable<MysqlheartbeatBean> {
 
-        private Long master;
-        private Long slave;
+        private Long sysMilli;
+        private Long dbMicro;
 
-        public MysqlheartbeatBean(long master, long slave) {
-            this.master = master;
-            this.slave = slave;
+        public MysqlheartbeatBean(long sysMilli, long dbMicro) {
+            this.sysMilli = sysMilli;
+            this.dbMicro = dbMicro;
         }
 
-        public long getMaster() {
-            return master;
+        public long getSysMilli() {
+            return this.sysMilli;
         }
 
-        public long getSlave() {
-            return slave;
+        public long getDbMicro() {
+            return this.dbMicro;
         }
 
         public int compareTo(MysqlheartbeatBean t) {
-            if (this.master != t.master) {
-                return this.master.compareTo(t.master);
-            }
-            else {
-                return this.slave.compareTo(t.slave);
+            if (this.sysMilli != t.sysMilli) {
+                return this.sysMilli.compareTo(t.sysMilli);
+            } else {
+                return this.dbMicro.compareTo(t.dbMicro);
             }
         }
     }
