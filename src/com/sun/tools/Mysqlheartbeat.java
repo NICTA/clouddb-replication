@@ -172,12 +172,14 @@ public class Mysqlheartbeat {
             ResultSet selectHeartbeatsResultSet =
                     selectHeartbeatsStmt.executeQuery();
             while (selectHeartbeatsResultSet.next()) {
+                String sm = selectHeartbeatsResultSet.getString("sys_mill");
+                String dm = selectHeartbeatsResultSet.getString("db_micro");
                 results.add(
                         new MysqlheartbeatBean(
-                        microsFormat.parse(
-                        selectHeartbeatsResultSet.getString("sys_mill")).getTime(),
-                        microsFormat.parse(
-                        selectHeartbeatsResultSet.getString("db_micro")).getTime()));
+                        Long.valueOf(
+                        microsFormat.parse(sm.substring(0, 23)).getTime() + sm.substring(23)),
+                        Long.valueOf(
+                        microsFormat.parse(dm.substring(0, 23)).getTime() + dm.substring(23))));
             }
         } catch (Exception ex) {
             Logger.getLogger(Mysqlheartbeat.class.getName()).log(
