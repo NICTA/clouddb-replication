@@ -44,9 +44,10 @@ public class DBReadConnectionFactory extends DBConnectionFactory {
             return false;
         }
         try {
-            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            Class.forName("com.mysql.jdbc.ReplicationDriver").newInstance();
             if (conn == null || conn.isClosed()) {
                 conn = DriverManager.getConnection(connectionURL);
+                conn.setReadOnly(true);
                 conn.setAutoCommit(true);
             }
         } catch (Exception e) {

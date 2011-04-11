@@ -76,7 +76,8 @@ public class Mysqlheartbeat {
     private SimpleDateFormat microsFormat =
             new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
     // Output
-    private List<MysqlheartbeatBean> results = new LinkedList<MysqlheartbeatBean>();
+    private Thread writeThread;
+    private List<MysqlheartbeatBean> results = null;
     private Integer queryCount = 0;
 
     /**
@@ -167,6 +168,7 @@ public class Mysqlheartbeat {
     public void stop() throws IOException, InterruptedException {
         logger.fine("Stopping tool " + toolName);
         runningFlag = false;
+        results = new ArrayList<MysqlheartbeatBean>();
         logger.fine(toolName + " Started with SELECT" + " in start method");
         try {
             ResultSet selectHeartbeatsResultSet =
@@ -207,7 +209,7 @@ public class Mysqlheartbeat {
     @Postprocess
     public void getReport() {
         try {
-            BufferedWriter bufferWriter = new BufferedWriter(new FileWriter(logfile, true));
+            BufferedWriter bufferWriter = new BufferedWriter(new FileWriter(logfile, false));
             if (!results.isEmpty()) {
                 bufferWriter.write("===========================================================\n");
                 bufferWriter.write("sys_milli,\t\tdb_micro,\t\ttime_diff\n");
@@ -217,8 +219,8 @@ public class Mysqlheartbeat {
                             + String.valueOf(mhb.getDbMicro()) + ",\t\t"
                             + String.valueOf(mhb.getDbMicro() - mhb.getSysMilli()) + "\n");
                 }
+                bufferWriter.flush();
             }
-            bufferWriter.flush();
             bufferWriter.close();
         } catch (IOException ex) {
             Logger.getLogger(Mysqlheartbeat.class.getName()).log(Level.SEVERE, null, ex.getMessage());

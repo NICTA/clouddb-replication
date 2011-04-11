@@ -36,7 +36,8 @@ public abstract class DBConnectionFactory {
     protected boolean closed = false;
 
     protected DBConnectionFactory(String dbhost) {
-        connectionURL = String.format("jdbc:mysql://%s/%s?user=%s&password=%s",
+        connectionURL = String.format("jdbc:mysql:replication://%s/%s?user=%s&password=%s"
+                + "&autoReconnect=true&roundRobinLoadBalance=true",
                 dbhost, DB_NAME, DB_USER, DB_PASS);
     }
 

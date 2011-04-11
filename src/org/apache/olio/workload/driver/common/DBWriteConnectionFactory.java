@@ -45,9 +45,10 @@ public class DBWriteConnectionFactory extends DBConnectionFactory {
         }
 
         try {
-            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            Class.forName("com.mysql.jdbc.ReplicationDriver").newInstance();
             if (conn == null || conn.isClosed()) {
                 conn = DriverManager.getConnection(connectionURL);
+                conn.setReadOnly(false);
                 conn.setAutoCommit(false);
             }
         } catch (Exception e) {

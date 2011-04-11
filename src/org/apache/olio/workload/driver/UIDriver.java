@@ -51,8 +51,8 @@ mix = {
     @Row({0, 0, 0, 0, 100, 0, 0}), // Add Person
     @Row({0, 0, 0, 100, 0, 0, 0}) // Add Event
 })
-@NegativeExponential(cycleType = CycleType.THINKTIME,
-cycleMean = 0,
+@NegativeExponential(cycleType = CycleType.CYCLETIME,
+cycleMean = 5000,
 cycleDeviation = 2)
 public class UIDriver {
 
@@ -80,7 +80,7 @@ public class UIDriver {
 
         String[] dbhosts = ctx.getXPathValue(
                 "/olio/dbServer/fa:hostConfig/fa:host").split(" ");
-        String masterhost = dbhosts[0];
+        String dbhost_list = new String();
 
         int loadedScale = Integer.parseInt(
                 ctx.getXPathValue("/olio/dbServer/scale"));
@@ -92,31 +92,15 @@ public class UIDriver {
                     + "users. Run terminating!");
         }
 
-        // dbhosts is generated from /olio/dbServer/fa:hostConfig/fa:host, which 
-        // looks like "db1 db2 db3", representing a database list of "master
-        // slave1 slave2".
-        // We assume that master database is only for write purpose, then,
-        // (dbhosts.length - 1) can be used to allocate clients into all buckets
-        // of slave database.
-        // If a master database is also needed for read purpose, then the fa:host
-        // should read like "db1 db1 db2 db3".
-        // If only one database is specified, like "db", then it is used for
-        // both read and write.
-        int bucket = 0;
-        String dbhost = null;
-        if (dbhosts.length == 1) {
-            bucket = Utilities.selectBucket(ctx.getThreadId(),
-                    ctx.getClientsInDriver(), dbhosts.length);
-            dbhost = dbhosts[bucket];
 
-        } else {
-            bucket = Utilities.selectBucket(ctx.getThreadId(),
-                    ctx.getClientsInDriver(), dbhosts.length - 1);
-            dbhost = dbhosts[bucket + 1];
+        for (int i = 0; i < dbhosts.length - 1; i++) {
+            dbhost_list += dbhosts[i] + ",";
         }
+        dbhost_list += dbhosts[dbhosts.length - 1];
 
-        dbWriteConn = new DBWriteConnectionFactory(masterhost);
-        dbReadConn = new DBReadConnectionFactory(dbhost);
+
+        dbWriteConn = new DBWriteConnectionFactory(dbhost_list);
+        dbReadConn = new DBReadConnectionFactory(dbhost_list);
 
         isLoggedOn = false;
     }
@@ -187,9 +171,9 @@ public class UIDriver {
     @BenchmarkOperation(name = "AddEvent",
     max90th = 4,
     timing = Timing.MANUAL)
-    @NegativeExponential(cycleType = CycleType.THINKTIME,
-    cycleMean = 0,
-    cycleMin = 0,
+    @NegativeExponential(cycleType = CycleType.CYCLETIME,
+    cycleMean = 5000,
+    cycleMin = 3000,
     truncateAtMin = false,
     cycleDeviation = 2)
     public void doAddEvent() throws Exception {
@@ -217,9 +201,9 @@ public class UIDriver {
     @BenchmarkOperation(name = "AddPerson",
     max90th = 3,
     timing = Timing.MANUAL)
-    @NegativeExponential(cycleType = CycleType.THINKTIME,
-    cycleMean = 0,
-    cycleMin = 0,
+    @NegativeExponential(cycleType = CycleType.CYCLETIME,
+    cycleMean = 5000,
+    cycleMin = 2000,
     truncateAtMin = false,
     cycleDeviation = 2)
     public void doAddPerson() throws Exception {
