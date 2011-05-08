@@ -19,7 +19,6 @@
 package org.apache.olio.workload.driver;
 
 import com.sun.faban.driver.*;
-import com.sun.faban.common.Utilities;
 import org.apache.olio.workload.util.RandomUtil;
 import org.apache.olio.workload.util.ScaleFactors;
 import org.apache.olio.workload.util.UserName;
