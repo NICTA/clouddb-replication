@@ -27,9 +27,14 @@ public class AddAttendee implements Operatable {
             + "AND (`events_users`.event_id = ? )  LIMIT 1;";
     private static final String INSERT_EVENTS_USERS = "INSERT INTO `events_users` "
             + "(`event_id`, `user_id`) VALUES (?, ?)";
+    private static final String SELECT_USERS2 = "SELECT * FROM `users`  "
+            + "INNER JOIN `events_users` "
+            + "ON `users`.id = `events_users`.user_id "
+            + "WHERE (`events_users`.event_id = ? )  LIMIT 20";
     // Statements
     private PreparedStatement selectUsersStmt = null;
     private PreparedStatement insertEventsUsersStmt = null;
+    private PreparedStatement selectUsers2Stmt = null;
     // Input
     private Connection conn = null;
     private Integer eventId = 0;
@@ -47,6 +52,7 @@ public class AddAttendee implements Operatable {
         try {
             selectUsersStmt = conn.prepareStatement(SELECT_USERS);
             insertEventsUsersStmt = conn.prepareStatement(INSERT_EVENTS_USERS);
+            selectUsers2Stmt = conn.prepareStatement(SELECT_USERS2);
         } catch (SQLException ex) {
             Logger.getLogger(AddAttendee.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }
@@ -62,6 +68,9 @@ public class AddAttendee implements Operatable {
                 insertEventsUsersStmt.setInt(1, eventId);
                 insertEventsUsersStmt.setInt(2, userId);
                 insertEventsUsersStmt.executeUpdate();
+
+                selectUsers2Stmt.setInt(1, eventId);
+                selectUsers2Stmt.executeQuery();
 
                 conn.commit();
                 success = true;
@@ -79,6 +88,9 @@ public class AddAttendee implements Operatable {
             }
             if (!insertEventsUsersStmt.isClosed()) {
                 insertEventsUsersStmt.close();
+            }
+            if (!selectUsers2Stmt.isClosed()) {
+                selectUsers2Stmt.close();
             }
         } catch (SQLException ex) {
             Logger.getLogger(TagSearch.class.getName()).log(Level.SEVERE, null, ex.getMessage());

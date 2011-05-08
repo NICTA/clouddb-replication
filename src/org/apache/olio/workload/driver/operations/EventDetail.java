@@ -62,7 +62,7 @@ public class EventDetail implements Operatable {
     private Connection conn = null;
     private Integer eventId = 0;
     // Output
-    private List<String> imageUrls = new ArrayList<String>();
+    private List<Integer> attendeesList = new ArrayList<Integer>();
 
     public EventDetail(DBConnectionFactory dbConn, String eventId) {
         this.conn = dbConn.createConnection();
@@ -99,11 +99,8 @@ public class EventDetail implements Operatable {
             }
 
             selectImagesStmt.setInt(1, imgIdx);
-            ResultSet selectImagesResultSet = selectImagesStmt.executeQuery();
-            while (selectImagesResultSet.next()) {
-                imageUrls.add(selectImagesResultSet.getString("filename"));
-            }
-
+            selectImagesStmt.executeQuery();
+            
             selectDocumentsStmt.setInt(1, docIdx);
             selectDocumentsStmt.executeQuery();
 
@@ -131,7 +128,10 @@ public class EventDetail implements Operatable {
             selectAddressesStmt.executeQuery();
 
             selectUsers2Stmt.setInt(1, eventId);
-            selectUsers2Stmt.executeQuery();
+            ResultSet selectUsers2ResultSet = selectUsers2Stmt.executeQuery();
+            if (selectUsers2ResultSet.next()) {
+                attendeesList.add(selectUsers2ResultSet.getInt("user_id"));
+            }
 
             countTagsStmt.setInt(1, eventId);
             countTagsStmt.executeQuery();
@@ -144,8 +144,8 @@ public class EventDetail implements Operatable {
         cleanup();
     }
 
-    public List<String> getImageUrls() {
-        return imageUrls;
+    public List<Integer> getAttendeeList() {
+        return attendeesList;
     }
 
     public void cleanup() {

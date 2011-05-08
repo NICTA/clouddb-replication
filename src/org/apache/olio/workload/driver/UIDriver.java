@@ -250,7 +250,8 @@ public class UIDriver {
         eventDetail.execute();
         ctx.pauseTime();
 
-        boolean canAddAttendee = isLoggedOn;
+        boolean canAddAttendee = isLoggedOn && 
+                !(eventDetail.getAttendeeList().contains(randomId));
         if (canAddAttendee) {
             // 10% of the time we can add ourselves, we will.
             int card = random.random(0, 9);
