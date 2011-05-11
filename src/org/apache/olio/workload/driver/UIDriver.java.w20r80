@@ -46,8 +46,8 @@ mix = {
     @Row({21, 6, 41, 31, 0, 1, 0}), // Tag Search
     @Row({72, 21, 0, 0, 6, 1, 0}), // Event Detail
     @Row({52, 6, 0, 31, 11, 0, 0}), // Person Detail
-    @Row({0, 0, 0, 0, 2.975, 97.025, 0}), // Add Person
-    @Row({0, 0, 0, 2.975, 0, 0, 97.025}) // Add Event
+    @Row({0, 0, 0, 0, 11.878, 88.122, 0}), // Add Person
+    @Row({0, 0, 0, 11.878, 0, 0, 88.122}) // Add Event
 })
 @NegativeExponential(cycleType = CycleType.CYCLETIME,
 cycleMean = 5000,
