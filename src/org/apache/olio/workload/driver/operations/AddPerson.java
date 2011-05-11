@@ -13,7 +13,6 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.olio.workload.driver.common.DBConnectionFactory;
-import org.apache.olio.workload.driver.common.Message.MESSAGE;
 import org.apache.olio.workload.driver.common.Operatable;
 
 /**
@@ -64,7 +63,7 @@ public class AddPerson implements Operatable {
     private String[] addressArr = null;
     private Integer threadId = -1;
     // Output
-    private MESSAGE message = null;
+    private String message = null;
 
     public AddPerson(DBConnectionFactory dbConn, String[] parameters,
             String[] addressArr, int threadId) {
@@ -135,7 +134,7 @@ public class AddPerson implements Operatable {
             ResultSet selectUsersResultSet = selectUsersStmt.executeQuery();
             if (selectUsersResultSet.next()) {
                 userExisted = true;
-                message = MESSAGE.EXISTED;
+                message = "The transaction is cancelled due to duplicated user.";
             }
 
             if (!userExisted) {
@@ -144,7 +143,8 @@ public class AddPerson implements Operatable {
                 insertUsersStmt.setTimestamp(3, new java.sql.Timestamp(System.currentTimeMillis()));
                 insertUsersStmt.setString(4, parameters[0]);
                 insertUsersStmt.setString(5, parameters[3]);
-                insertUsersStmt.setString(6, parameters[7]);
+                // Use 'PST' all timezone to avoid Data too long for column 'timezone'
+                insertUsersStmt.setString(6, "PST");
                 insertUsersStmt.setInt(7, addrIdx);
                 insertUsersStmt.setString(8, parameters[2]);
                 insertUsersStmt.setString(9, parameters[5]);
@@ -154,21 +154,20 @@ public class AddPerson implements Operatable {
                 insertUsersStmt.executeUpdate();
 
                 conn.commit();
-                message = MESSAGE.COMMITTED;
             }
         } catch (SQLException ex) {
+            Logger.getLogger(AddPerson.class.getName()).log(Level.SEVERE, null, ex.getMessage());
             try {
                 conn.rollback();
-                message = MESSAGE.ROLLBACKED;
+                message = "The transaction is rolled back due to " + ex.getMessage();
             } catch (SQLException ex1) {
                 Logger.getLogger(AddPerson.class.getName()).log(Level.SEVERE, null, ex1.getMessage());
             }
-            Logger.getLogger(AddPerson.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }
         cleanup();
     }
 
-    public MESSAGE getSuccess() {
+    public String getSuccess() {
         return message;
     }
 

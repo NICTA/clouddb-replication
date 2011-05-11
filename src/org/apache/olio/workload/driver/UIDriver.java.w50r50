@@ -23,7 +23,6 @@ import org.apache.olio.workload.util.RandomUtil;
 import org.apache.olio.workload.util.ScaleFactors;
 import org.apache.olio.workload.util.UserName;
 import org.apache.olio.workload.driver.common.*;
-import org.apache.olio.workload.driver.common.Message.MESSAGE;
 import org.apache.olio.workload.driver.operations.*;
 
 import java.io.IOException;
@@ -47,8 +46,8 @@ mix = {
     @Row({21, 6, 41, 31, 0, 1, 0}), // Tag Search
     @Row({72, 21, 0, 0, 6, 1, 0}), // Event Detail
     @Row({52, 6, 0, 31, 11, 0, 0}), // Person Detail
-    @Row({0, 0, 0, 0, 100, 0, 0}), // Add Person
-    @Row({0, 0, 0, 100, 0, 0, 0}) // Add Event
+    @Row({0, 0, 0, 0, 3, 97, 0}), // Add Person
+    @Row({0, 0, 0, 3, 0, 0, 97}) // Add Event
 })
 @NegativeExponential(cycleType = CycleType.CYCLETIME,
 cycleMean = 5000,
@@ -190,9 +189,9 @@ public class UIDriver {
             addEvent.execute();
             ctx.pauseTime();
 
-            MESSAGE message = addEvent.getSuccess();
-            if (message != MESSAGE.COMMITTED) {
-                throw new Exception(message.getMessage());
+            String message = addEvent.getSuccess();
+            if (message != null) {
+                throw new Exception(message);
             }
         }
     }
@@ -221,9 +220,9 @@ public class UIDriver {
             addPerson.execute();
             ctx.pauseTime();
 
-            MESSAGE message = addPerson.getSuccess();
-            if (message != MESSAGE.COMMITTED) {
-                throw new Exception(message.getMessage());
+            String message = addPerson.getSuccess();
+            if (message != null) {
+                throw new Exception(message);
             }
         }
     }

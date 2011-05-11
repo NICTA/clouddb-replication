@@ -14,7 +14,6 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.olio.workload.driver.common.DBConnectionFactory;
-import org.apache.olio.workload.driver.common.Message.MESSAGE;
 import org.apache.olio.workload.driver.common.Operatable;
 
 /**
@@ -89,7 +88,7 @@ public class AddEvent implements Operatable {
     private Integer threadId = -1;
     private Integer userId = 0;
     // Output
-    private MESSAGE message = null;
+    private String message = null;
 
     public AddEvent(DBConnectionFactory dbConn, String[] parameters,
             String[] addressArr, Integer threadId, Integer userId) {
@@ -228,13 +227,12 @@ public class AddEvent implements Operatable {
                 }
 
                 conn.commit();
-                message = MESSAGE.COMMITTED;
             }
         } catch (SQLException ex) {
             Logger.getLogger(AddEvent.class.getName()).log(Level.SEVERE, null, ex.getMessage());
             try {
                 conn.rollback();
-                message = MESSAGE.ROLLBACKED;
+                message = "The transation is rolled back due to " + ex.getMessage();
             } catch (SQLException ex1) {
                 Logger.getLogger(AddEvent.class.getName()).log(Level.SEVERE, null, ex1.getMessage());
             }
@@ -242,7 +240,7 @@ public class AddEvent implements Operatable {
         cleanup();
     }
 
-    public MESSAGE getSuccess() {
+    public String getSuccess() {
         return message;
     }
 
