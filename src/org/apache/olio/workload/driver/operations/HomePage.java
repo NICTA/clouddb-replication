@@ -48,8 +48,12 @@ public class HomePage implements Operatable {
     private List<String> eventIds = new ArrayList<String>();
     private List<String> imageUrls = new ArrayList<String>();
 
-    public HomePage(DBConnectionFactory dbConn) {
-        this.conn = dbConn.createConnection();
+    public HomePage() {
+        try {
+            this.conn = DBConnectionFactory.getReadConnection();
+        } catch (SQLException ex) {
+            Logger.getLogger(HomePage.class.getName()).log(Level.SEVERE, null, ex.getMessage());
+        }
     }
 
     public void prepare() {
@@ -76,6 +80,7 @@ public class HomePage implements Operatable {
                 addressIds.add(selectEventsResultSet.getInt("address_id"));
                 imageIds.add(selectEventsResultSet.getInt("image_id"));
             }
+            selectEventsResultSet.close();
 
             for (int i = 0; i < addressIds.size(); i++) {
                 selectAddressesStmt.setInt(i + 1, addressIds.get(i));
@@ -95,6 +100,7 @@ public class HomePage implements Operatable {
             while (selectImagesResultSet.next()) {
                 imageUrls.add(selectImagesResultSet.getString("filename"));
             }
+            selectImagesResultSet.close();
 
             countEventsStmt.setDate(1, new java.sql.Date(System.currentTimeMillis()));
             countEventsStmt.executeQuery();
@@ -116,20 +122,23 @@ public class HomePage implements Operatable {
 
     public void cleanup() {
         try {
-            if (!selectEventsStmt.isClosed()) {
+            if (selectEventsStmt != null) {
                 selectEventsStmt.close();
             }
-            if (!selectAddressesStmt.isClosed()) {
+            if (selectAddressesStmt != null) {
                 selectAddressesStmt.close();
             }
-            if (!selectImagesStmt.isClosed()) {
+            if (selectImagesStmt != null) {
                 selectImagesStmt.close();
             }
-            if (!countEventsStmt.isClosed()) {
+            if (countEventsStmt != null) {
                 countEventsStmt.close();
             }
-            if (!selectTagsStmt.isClosed()) {
+            if (selectTagsStmt != null) {
                 selectTagsStmt.close();
+            }
+            if (conn != null) {
+                conn.close();
             }
         } catch (SQLException ex) {
             Logger.getLogger(TagSearch.class.getName()).log(Level.SEVERE, null, ex.getMessage());

@@ -42,8 +42,12 @@ public class Login implements Operatable {
     // Output
     private int loginIdx = 0;
 
-    public Login(DBConnectionFactory dbConn, String username, Integer randomId) {
-        this.conn = dbConn.createConnection();
+    public Login(String username, Integer randomId) {
+        try {
+            this.conn = DBConnectionFactory.getReadConnection();
+        } catch (SQLException ex) {
+            Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex.getMessage());
+        }
         this.username = username;
         this.randomId = randomId;
     }
@@ -69,8 +73,11 @@ public class Login implements Operatable {
             if (selectUsers1ResultSet.next()) {
                 loginIdx = -1;
             } else {
+                selectUsers1ResultSet.close();
+                cleanup();
                 return;
             }
+            selectUsers1ResultSet.close();
 
             selectInvitesStmt.setInt(1, randomId);
             selectInvitesStmt.executeQuery();
@@ -93,17 +100,20 @@ public class Login implements Operatable {
 
     public void cleanup() {
         try {
-            if (!selectUsers1Stmt.isClosed()) {
+            if (selectUsers1Stmt != null) {
                 selectUsers1Stmt.close();
             }
-            if (!selectInvitesStmt.isClosed()) {
+            if (selectInvitesStmt != null) {
                 selectInvitesStmt.close();
             }
-            if (!selectEventsStmt.isClosed()) {
+            if (selectEventsStmt != null) {
                 selectEventsStmt.close();
             }
-            if (!selectUsers2Stmt.isClosed()) {
+            if (selectUsers2Stmt != null) {
                 selectUsers2Stmt.close();
+            }
+            if (conn != null) {
+                conn.close();
             }
         } catch (SQLException ex) {
             Logger.getLogger(TagSearch.class.getName()).log(Level.SEVERE, null, ex.getMessage());

@@ -40,8 +40,12 @@ public class TagSearch implements Operatable {
     private List<String> eventIds = new ArrayList<String>();
     private List<String> imageUrls = new ArrayList<String>();
 
-    public TagSearch(DBConnectionFactory dbConn, String tag) {
-        this.conn = dbConn.createConnection();
+    public TagSearch(String tag) {
+        try {
+            this.conn = DBConnectionFactory.getReadConnection();
+        } catch (SQLException ex) {
+            Logger.getLogger(TagSearch.class.getName()).log(Level.SEVERE, null, ex.getMessage());
+        }
         this.tag = tag;
     }
 
@@ -64,12 +68,14 @@ public class TagSearch implements Operatable {
                 eventIds.add(String.valueOf(selectEventsResultSet.getInt("id")));
                 imageIds.add(selectEventsResultSet.getInt("image_id"));
             }
+            selectEventsResultSet.close();
             for (Integer imageId : imageIds) {
                 selectImagesStmt.setInt(1, imageId);
                 ResultSet selectImagesResultSet = selectImagesStmt.executeQuery();
                 if (selectImagesResultSet.next()) {
                     imageUrls.add(selectImagesResultSet.getString("filename"));
                 }
+                selectImagesResultSet.close();
             }
         } catch (SQLException ex) {
             Logger.getLogger(TagSearch.class.getName()).log(Level.SEVERE, null, ex.getMessage());
@@ -87,11 +93,14 @@ public class TagSearch implements Operatable {
 
     public void cleanup() {
         try {
-            if (!selectEventsStmt.isClosed()) {
+            if (selectEventsStmt != null) {
                 selectEventsStmt.close();
             }
-            if (!selectImagesStmt.isClosed()) {
+            if (selectImagesStmt != null) {
                 selectImagesStmt.close();
+            }
+            if (conn != null) {
+                conn.close();
             }
         } catch (SQLException ex) {
             Logger.getLogger(TagSearch.class.getName()).log(Level.SEVERE, null, ex.getMessage());

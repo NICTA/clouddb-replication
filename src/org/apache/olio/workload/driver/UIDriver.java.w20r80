@@ -19,11 +19,15 @@
 package org.apache.olio.workload.driver;
 
 import com.sun.faban.driver.*;
+import java.beans.PropertyVetoException;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.olio.workload.util.RandomUtil;
 import org.apache.olio.workload.util.ScaleFactors;
 import org.apache.olio.workload.util.UserName;
-import org.apache.olio.workload.driver.common.*;
 import org.apache.olio.workload.driver.operations.*;
+import org.apache.olio.workload.driver.common.DBConnectionFactory;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -41,13 +45,13 @@ threadPerScale = 1)
 //                  "Logout", "AddEvent",  "AddPerson"},
 operations = {"HomePage", "Login", "TagSearch", "EventDetail", "PersonDetail", "AddPerson", "AddEvent"},
 mix = {
-    @Row({0, 11, 52, 36, 0, 1, 0}), // Home Page
-    @Row({0, 0, 60, 20, 0, 0, 20}), // Login
-    @Row({21, 6, 41, 31, 0, 1, 0}), // Tag Search
-    @Row({72, 21, 0, 0, 6, 1, 0}), // Event Detail
-    @Row({52, 6, 0, 31, 11, 0, 0}), // Person Detail
-    @Row({0, 0, 0, 0, 11.878, 88.122, 0}), // Add Person
-    @Row({0, 0, 0, 11.878, 0, 0, 88.122}) // Add Event
+    @Row({1, 1, 1, 1, 1, 0.834, 0.834}), // Home Page
+    @Row({1, 1, 1, 1, 1, 0.834, 0.834}), // Login
+    @Row({1, 1, 1, 1, 1, 0.834, 0.834}), // Tag Search
+    @Row({1, 1, 1, 1, 1, 0.834, 0.834}), // Event Detail
+    @Row({1, 1, 1, 1, 1, 0.834, 0.834}), // Person Detail
+    @Row({1, 1, 1, 1, 1, 0, 0}), // Add Person
+    @Row({1, 1, 1, 1, 1, 0, 0}) // Add Event
 })
 @NegativeExponential(cycleType = CycleType.CYCLETIME,
 cycleMean = 5000,
@@ -66,10 +70,8 @@ public class UIDriver {
     private HashSet<String> cachedURLs = new HashSet<String>();
     private StringBuilder tags = new StringBuilder();
     private LinkedHashSet<Integer> tagSet = new LinkedHashSet<Integer>(7);
-    private DBReadConnectionFactory dbReadConn;
-    private DBWriteConnectionFactory dbWriteConn;
 
-    public UIDriver() throws XPathExpressionException {
+    public UIDriver() throws XPathExpressionException, PropertyVetoException, SQLException, ClassNotFoundException {
         ctx = DriverContext.getContext();
         int scale = ctx.getScale();
         ScaleFactors.setActiveUsers(scale);
@@ -79,7 +81,7 @@ public class UIDriver {
         String[] dbhosts = ctx.getXPathValue(
                 "/olio/dbServer/fa:hostConfig/fa:host").split(" ");
         String dbhost_list = new String();
-
+        
         int loadedScale = Integer.parseInt(
                 ctx.getXPathValue("/olio/dbServer/scale"));
         loadedUsers = ScaleFactors.USERS_RATIO * loadedScale;
@@ -96,9 +98,8 @@ public class UIDriver {
         }
         dbhost_list += dbhosts[dbhosts.length - 1];
 
-
-        dbWriteConn = new DBWriteConnectionFactory(dbhost_list);
-        dbReadConn = new DBReadConnectionFactory(dbhost_list);
+        DBConnectionFactory.setDBHost(dbhost_list);
+        DBConnectionFactory.setMaxActive(-1);
 
         isLoggedOn = false;
     }
@@ -107,7 +108,7 @@ public class UIDriver {
     max90th = 1,
     timing = Timing.MANUAL)
     public void doHomePage() throws IOException {
-        HomePage homePage = new HomePage(dbReadConn);
+        HomePage homePage = new HomePage();
         ctx.recordTime();
         homePage.execute();
         ctx.pauseTime();
@@ -125,7 +126,7 @@ public class UIDriver {
 
         randomId = selectUserID();
         username = UserName.getUserName(randomId);
-        Login login = new Login(dbReadConn, username, randomId);
+        Login login = new Login(username, randomId);
         ctx.recordTime();
         login.execute();
         ctx.pauseTime();
@@ -155,7 +156,7 @@ public class UIDriver {
     public void doTagSearch() throws IOException {
         String tag = RandomUtil.randomTagName(random);
 
-        TagSearch tagSearch = new TagSearch(dbReadConn, tag);
+        TagSearch tagSearch = new TagSearch(tag);
         ctx.recordTime();
         tagSearch.execute();
         ctx.pauseTime();
@@ -175,16 +176,17 @@ public class UIDriver {
     truncateAtMin = false,
     cycleDeviation = 2)
     public void doAddEvent() throws Exception {
+        int userId = randomId;
         if (!isLoggedOn) {
-            throw new IOException("User not logged when trying to add an event");
+            userId = selectUserID();
         }
 
         String[] addressArr = prepareAddress();
         String[] parameters = prepareEvent();
         if (parameters[0] == null || parameters[0].length() == 0) {
         } else {
-            AddEvent addEvent = new AddEvent(dbWriteConn, parameters, addressArr,
-                    ctx.getThreadId(), randomId);
+            AddEvent addEvent = new AddEvent(parameters, addressArr,
+                    ctx.getThreadId(), userId);
             ctx.recordTime();
             addEvent.execute();
             ctx.pauseTime();
@@ -214,8 +216,8 @@ public class UIDriver {
         // Debug
         if (parameters[0] == null || parameters[0].length() == 0) {
         } else {
-            AddPerson addPerson = new AddPerson(dbWriteConn, parameters,
-                    addressArr, ctx.getThreadId());
+            AddPerson addPerson = new AddPerson(parameters, addressArr, 
+                    ctx.getThreadId());
             ctx.recordTime();
             addPerson.execute();
             ctx.pauseTime();
@@ -233,7 +235,7 @@ public class UIDriver {
     public void doEventDetail() throws Exception {
         //select random event
         if (selectedEvent == null) {
-            HomePage homePage = new HomePage(dbReadConn);
+            HomePage homePage = new HomePage();
             ctx.recordTime();
             homePage.execute();
             ctx.pauseTime();
@@ -243,7 +245,7 @@ public class UIDriver {
             }
         }
 
-        EventDetail eventDetail = new EventDetail(dbReadConn, selectedEvent);
+        EventDetail eventDetail = new EventDetail(selectedEvent);
         ctx.recordTime();
         eventDetail.execute();
         ctx.pauseTime();
@@ -254,7 +256,7 @@ public class UIDriver {
             // 10% of the time we can add ourselves, we will.
             int card = random.random(0, 9);
             if (card == 0) {
-                AddAttendee addAttendee = new AddAttendee(dbWriteConn, selectedEvent, randomId);
+                AddAttendee addAttendee = new AddAttendee(selectedEvent, randomId);
                 ctx.recordTime();
                 addAttendee.execute();
                 ctx.pauseTime();
@@ -267,7 +269,7 @@ public class UIDriver {
     timing = Timing.MANUAL)
     public void doPersonDetail() throws IOException {
         int id = random.random(1, ScaleFactors.users);
-        PersonDetail personDetail = new PersonDetail(dbReadConn, id);
+        PersonDetail personDetail = new PersonDetail(id);
         ctx.recordTime();
         personDetail.execute();
         ctx.pauseTime();

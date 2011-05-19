@@ -64,8 +64,12 @@ public class EventDetail implements Operatable {
     // Output
     private List<Integer> attendeesList = new ArrayList<Integer>();
 
-    public EventDetail(DBConnectionFactory dbConn, String eventId) {
-        this.conn = dbConn.createConnection();
+    public EventDetail(String eventId) {
+        try {
+            this.conn = DBConnectionFactory.getReadConnection();
+        } catch (SQLException ex) {
+            Logger.getLogger(EventDetail.class.getName()).log(Level.SEVERE, null, ex.getMessage());
+        }
         this.eventId = Integer.parseInt(eventId);
     }
 
@@ -97,6 +101,7 @@ public class EventDetail implements Operatable {
                 docIdx = selectEventsResultSet.getInt("document_id");
                 addrIdx = selectEventsResultSet.getInt("address_id");
             }
+            selectEventsResultSet.close();
 
             selectImagesStmt.setInt(1, imgIdx);
             selectImagesStmt.executeQuery();
@@ -109,6 +114,7 @@ public class EventDetail implements Operatable {
             while (selectCommentsResultSet.next()) {
                 userIds.add(selectCommentsResultSet.getInt("user_id"));
             }
+            selectCommentsResultSet.close();
 
             String userIdList = new String();
             if (userIds.size() > 0) {
@@ -132,6 +138,7 @@ public class EventDetail implements Operatable {
             if (selectUsers2ResultSet.next()) {
                 attendeesList.add(selectUsers2ResultSet.getInt("user_id"));
             }
+            selectUsers2ResultSet.close();
 
             countTagsStmt.setInt(1, eventId);
             countTagsStmt.executeQuery();
@@ -150,32 +157,35 @@ public class EventDetail implements Operatable {
 
     public void cleanup() {
         try {
-            if (!selectEventsStmt.isClosed()) {
+            if (selectEventsStmt != null) {
                 selectEventsStmt.close();
             }
-            if (!selectImagesStmt.isClosed()) {
+            if (selectImagesStmt != null) {
                 selectImagesStmt.close();
             }
-            if (!selectDocumentsStmt.isClosed()) {
+            if (selectDocumentsStmt != null) {
                 selectDocumentsStmt.close();
             }
-            if (!selectCommentsStmt.isClosed()) {
+            if (selectCommentsStmt != null) {
                 selectCommentsStmt.close();
             }
-            if (!selectUsers1Stmt.isClosed()) {
+            if (selectUsers1Stmt != null) {
                 selectUsers1Stmt.close();
             }
-            if (!selectAddressesStmt.isClosed()) {
+            if (selectAddressesStmt != null) {
                 selectAddressesStmt.close();
             }
-            if (!selectUsers2Stmt.isClosed()) {
+            if (selectUsers2Stmt != null) {
                 selectUsers2Stmt.close();
             }
-            if (!countTagsStmt.isClosed()) {
+            if (countTagsStmt != null) {
                 countTagsStmt.close();
             }
-            if (!selectTagsStmt.isClosed()) {
+            if (selectTagsStmt != null) {
                 selectTagsStmt.close();
+            }
+            if (conn != null) {
+                conn.close();
             }
         } catch (SQLException ex) {
             Logger.getLogger(TagSearch.class.getName()).log(Level.SEVERE, null, ex.getMessage());

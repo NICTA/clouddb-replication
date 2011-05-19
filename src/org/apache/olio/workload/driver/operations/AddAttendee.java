@@ -42,8 +42,12 @@ public class AddAttendee implements Operatable {
     // Output
     private Boolean success = false;
 
-    public AddAttendee(DBConnectionFactory dbConn, String eventId, Integer userId) {
-        this.conn = dbConn.createConnection();
+    public AddAttendee(String eventId, Integer userId) {
+        try {
+            this.conn = DBConnectionFactory.getWriteConnection();
+        } catch (SQLException ex) {
+            Logger.getLogger(AddAttendee.class.getName()).log(Level.SEVERE, null, ex.getMessage());
+        }
         this.eventId = Integer.parseInt(eventId);
         this.userId = userId;
     }
@@ -75,6 +79,7 @@ public class AddAttendee implements Operatable {
                 conn.commit();
                 success = true;
             }
+            selectUsers2ResultSet.close();
         } catch (SQLException ex) {
             Logger.getLogger(AddAttendee.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }
@@ -83,14 +88,17 @@ public class AddAttendee implements Operatable {
 
     public void cleanup() {
         try {
-            if (!selectUsersStmt.isClosed()) {
+            if (selectUsersStmt != null) {
                 selectUsersStmt.close();
             }
-            if (!insertEventsUsersStmt.isClosed()) {
+            if (insertEventsUsersStmt != null) {
                 insertEventsUsersStmt.close();
             }
-            if (!selectUsers2Stmt.isClosed()) {
+            if (selectUsers2Stmt != null) {
                 selectUsers2Stmt.close();
+            }
+            if (conn != null) {
+                conn.close();
             }
         } catch (SQLException ex) {
             Logger.getLogger(TagSearch.class.getName()).log(Level.SEVERE, null, ex.getMessage());

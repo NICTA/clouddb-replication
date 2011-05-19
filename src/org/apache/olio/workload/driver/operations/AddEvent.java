@@ -90,9 +90,13 @@ public class AddEvent implements Operatable {
     // Output
     private String message = null;
 
-    public AddEvent(DBConnectionFactory dbConn, String[] parameters,
-            String[] addressArr, Integer threadId, Integer userId) {
-        this.conn = dbConn.createConnection();
+    public AddEvent(String[] parameters, String[] addressArr,
+            Integer threadId, Integer userId) {
+        try {
+            this.conn = DBConnectionFactory.getWriteConnection();
+        } catch (SQLException ex) {
+            Logger.getLogger(AddEvent.class.getName()).log(Level.SEVERE, null, ex.getMessage());
+        }
         this.parameters = parameters;
         this.addressArr = addressArr;
         this.threadId = threadId;
@@ -143,6 +147,7 @@ public class AddEvent implements Operatable {
             if (insertAddressesResultSet.next()) {
                 addrIdx = insertAddressesResultSet.getInt(1);
             }
+            insertAddressesResultSet.close();
 
             selectImages1Stmt.setString(1, imagePrefix + threadId + "event.jpg");
             selectImages1Stmt.executeQuery();
@@ -154,6 +159,7 @@ public class AddEvent implements Operatable {
             if (insertImages1ResultSet.next()) {
                 img1Idx = insertImages1ResultSet.getInt(1);
             }
+            insertImages1ResultSet.close();
 
             selectImages2Stmt.setInt(1, img1Idx);
             selectImages2Stmt.executeQuery();
@@ -175,6 +181,7 @@ public class AddEvent implements Operatable {
             if (insertDocumentsResultSet.next()) {
                 docIdx = insertDocumentsResultSet.getInt(1);
             }
+            insertDocumentsResultSet.close();
 
             insertEventsStmt.setInt(1, img1Idx);
             insertEventsStmt.setInt(2, docIdx);
@@ -193,6 +200,7 @@ public class AddEvent implements Operatable {
             if (insertEventsResultSet.next()) {
                 evnIdx = insertEventsResultSet.getInt(1);
             }
+            insertEventsResultSet.close();
 
             selectUsers1Stmt.setInt(1, userId);
             selectUsers1Stmt.executeQuery();
@@ -204,6 +212,7 @@ public class AddEvent implements Operatable {
             if (selectUsers2ResultSet.next()) {
                 usersEventExisted = true;
             }
+            selectUsers2ResultSet.close();
 
             if (!usersEventExisted) {
                 insertEventsUsersStmt.setInt(1, evnIdx);
@@ -220,6 +229,7 @@ public class AddEvent implements Operatable {
                     if (selectTagsResultSet.next()) {
                         tagIdx = selectTagsResultSet.getInt("id");
                     }
+                    selectTagsResultSet.close();
 
                     insertTagsStmt.setInt(1, tagIdx);
                     insertTagsStmt.setInt(2, evnIdx);
@@ -246,50 +256,53 @@ public class AddEvent implements Operatable {
 
     public void cleanup() {
         try {
-            if (!insertAddressesStmt.isClosed()) {
+            if (insertAddressesStmt != null) {
                 insertAddressesStmt.close();
             }
-            if (!selectImages1Stmt.isClosed()) {
+            if (selectImages1Stmt != null) {
                 selectImages1Stmt.close();
             }
-            if (!insertImages1Stmt.isClosed()) {
+            if (insertImages1Stmt != null) {
                 insertImages1Stmt.close();
             }
-            if (!selectImages2Stmt.isClosed()) {
+            if (selectImages2Stmt != null) {
                 selectImages2Stmt.close();
             }
-            if (!selectImages3Stmt.isClosed()) {
+            if (selectImages3Stmt != null) {
                 selectImages3Stmt.close();
             }
-            if (!insertImages2Stmt.isClosed()) {
+            if (insertImages2Stmt != null) {
                 insertImages2Stmt.close();
             }
-            if (!selectDocumentsStmt.isClosed()) {
+            if (selectDocumentsStmt != null) {
                 selectDocumentsStmt.close();
             }
-            if (!insertDocumentsStmt.isClosed()) {
+            if (insertDocumentsStmt != null) {
                 insertDocumentsStmt.close();
             }
-            if (!insertEventsStmt.isClosed()) {
+            if (insertEventsStmt != null) {
                 insertEventsStmt.close();
             }
-            if (!selectUsers1Stmt.isClosed()) {
+            if (selectUsers1Stmt != null) {
                 selectUsers1Stmt.close();
             }
-            if (!selectUsers2Stmt.isClosed()) {
+            if (selectUsers2Stmt != null) {
                 selectUsers2Stmt.close();
             }
-            if (!insertEventsUsersStmt.isClosed()) {
+            if (insertEventsUsersStmt != null) {
                 insertEventsUsersStmt.close();
             }
-            if (!selectTaggingsStmt.isClosed()) {
+            if (selectTaggingsStmt != null) {
                 selectTaggingsStmt.close();
             }
-            if (!selectTagsStmt.isClosed()) {
+            if (selectTagsStmt != null) {
                 selectTagsStmt.close();
             }
-            if (!insertTagsStmt.isClosed()) {
+            if (insertTagsStmt != null) {
                 insertTagsStmt.close();
+            }
+            if (conn != null) {
+                conn.close();
             }
         } catch (SQLException ex) {
             Logger.getLogger(TagSearch.class.getName()).log(Level.SEVERE, null, ex.getMessage());

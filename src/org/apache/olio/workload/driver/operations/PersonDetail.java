@@ -56,8 +56,12 @@ public class PersonDetail implements Operatable {
     private List<String> eventIds = new ArrayList<String>();
     private List<String> imageUrls = new ArrayList<String>();
 
-    public PersonDetail(DBConnectionFactory dbConn, Integer userId) {
-        this.conn = dbConn.createConnection();
+    public PersonDetail(Integer userId) {
+        try {
+            this.conn = DBConnectionFactory.getReadConnection();
+        } catch (SQLException ex) {
+            Logger.getLogger(PersonDetail.class.getName()).log(Level.SEVERE, null, ex.getMessage());
+        }
         this.userId = userId;
     }
 
@@ -87,6 +91,7 @@ public class PersonDetail implements Operatable {
                 addrIdx = selectUsers1ResultSet.getInt("address_id");
                 imgIdx = selectUsers1ResultSet.getInt("image_id");
             }
+            selectUsers1ResultSet.close();
 
             selectAddressesStmt.setInt(1, addrIdx);
             selectAddressesStmt.executeQuery();
@@ -96,6 +101,7 @@ public class PersonDetail implements Operatable {
             if (selectImagesResultSet.next()) {
                 imageUrls.add(selectImagesResultSet.getString("filename"));
             }
+            selectImagesResultSet.close();
 
             selectEventsStmt.setInt(1, userId);
             ResultSet selectEventsResultSet = selectEventsStmt.executeQuery();
@@ -103,6 +109,7 @@ public class PersonDetail implements Operatable {
                 eventIds.add(String.valueOf(selectEventsResultSet.getInt("id")));
                 imgIds.add(selectEventsResultSet.getInt("image_id"));
             }
+            selectEventsResultSet.close();
 
             selectUsers2Stmt.setInt(1, userId);
             selectUsers2Stmt.executeQuery();
@@ -139,29 +146,32 @@ public class PersonDetail implements Operatable {
 
     public void cleanup() {
         try {
-            if (!selectUsers1Stmt.isClosed()) {
+            if (selectUsers1Stmt != null) {
                 selectUsers1Stmt.close();
             }
-            if (!selectAddressesStmt.isClosed()) {
+            if (selectAddressesStmt != null) {
                 selectAddressesStmt.close();
             }
-            if (!selectImagesStmt.isClosed()) {
+            if (selectImagesStmt != null) {
                 selectImagesStmt.close();
             }
-            if (!selectEventsStmt.isClosed()) {
+            if (selectEventsStmt != null) {
                 selectEventsStmt.close();
             }
-            if (!selectUsers2Stmt.isClosed()) {
+            if (selectUsers2Stmt != null) {
                 selectUsers2Stmt.close();
             }
-            if (!selectUsers3Stmt.isClosed()) {
+            if (selectUsers3Stmt != null) {
                 selectUsers3Stmt.close();
             }
-            if (!selectInvites1Stmt.isClosed()) {
+            if (selectInvites1Stmt != null) {
                 selectInvites1Stmt.close();
             }
-            if (!selectInvites2Stmt.isClosed()) {
+            if (selectInvites2Stmt != null) {
                 selectInvites2Stmt.close();
+            }
+            if (conn != null) {
+                conn.close();
             }
         } catch (SQLException ex) {
             Logger.getLogger(TagSearch.class.getName()).log(Level.SEVERE, null, ex.getMessage());

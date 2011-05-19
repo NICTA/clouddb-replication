@@ -19,43 +19,64 @@
  */
 package org.apache.olio.workload.driver.common;
 
-import java.sql.*;
-
-import java.util.logging.Level;
+import java.sql.Connection;
+import java.sql.SQLException;
+import org.apache.commons.dbcp.*;
 import java.util.logging.Logger;
 
-public abstract class DBConnectionFactory {
+public class DBConnectionFactory {
 
+    public static BasicDataSource bds;
     private static Logger logger =
             Logger.getLogger(DBConnectionFactory.class.getName());
     private static final String DB_NAME = "olio";
     private static final String DB_USER = "olio";
     private static final String DB_PASS = "olio";
-    protected String connectionURL;
-    protected Connection conn;
-    protected boolean closed = false;
+    private static final String URL_STRING = "jdbc:mysql:replication://%s/%s?"
+            + "user=%s&password=%s&autoReconnect=true&roundRobinLoadBalance=true";
+    private static final Integer MIN_IDLE = 5;
+    private static String connectionURL, dbhost;
+    private static Integer maxActive = 50;
 
-    protected DBConnectionFactory(String dbhost) {
-        connectionURL = String.format("jdbc:mysql:replication://%s/%s?user=%s&password=%s"
-                + "&autoReconnect=true&roundRobinLoadBalance=true",
-                dbhost, DB_NAME, DB_USER, DB_PASS);
+    public static void ensureConnection() {
+        if (dbhost != null) {
+            connectionURL = String.format(URL_STRING, dbhost,
+                    DB_NAME, DB_USER, DB_PASS);
+            bds = new BasicDataSource();
+            bds.setDriverClassName("com.mysql.jdbc.ReplicationDriver");
+            bds.setUrl(connectionURL);
+            bds.setUsername(DB_USER);
+            bds.setPassword(DB_PASS);
+            bds.setMaxActive(maxActive);
+            bds.setMinIdle(MIN_IDLE);
+        }
     }
 
-    abstract boolean ensureConnection();
-
-    abstract boolean resetConnection();
-
-    public Connection createConnection() {
-        if (conn == null) {
+    public static Connection getWriteConnection() throws SQLException {
+        if (bds == null) {
             ensureConnection();
         }
+        Connection conn = bds.getConnection();
+        conn.setAutoCommit(false);
+        conn.setReadOnly(false);
         return conn;
     }
 
-    void close() throws SQLException {
-        closed = true;
-        if (conn != null) {
-            conn.close();
+    public static Connection getReadConnection() throws SQLException {
+        if (bds == null) {
+            ensureConnection();
         }
+        Connection conn = bds.getConnection();
+        conn.setAutoCommit(true);
+        conn.setReadOnly(true);
+        return conn;
+    }
+
+    public static void setDBHost(String hostList) {
+        dbhost = hostList;
+    }
+
+    public static void setMaxActive(Integer num) {
+        maxActive = num;
     }
 }

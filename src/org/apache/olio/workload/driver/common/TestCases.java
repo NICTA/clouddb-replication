@@ -4,6 +4,7 @@
  */
 package org.apache.olio.workload.driver.common;
 
+import java.sql.Connection;
 import org.apache.olio.workload.driver.operations.AddAttendee;
 import org.apache.olio.workload.driver.operations.AddEvent;
 import org.apache.olio.workload.driver.operations.AddPerson;
@@ -21,7 +22,7 @@ public class TestCases {
 
     private static Integer password = 1;
     private static String username = "rhy6it";
-    private static String database = "localvm";
+    private static String database = "ec2-50-18-76-68.us-west-1.compute.amazonaws.com,ec2-50-18-74-85.us-west-1.compute.amazonaws.com";
     private static String tagname = "bi3cen";
     private static String eventParameters[] = {"grlyqkc peateux ",
         "jsvz fphqjvtfxf wwfn vgdustuv pdbroioxnz jvlajd mvnhqyqfd gdol snhbkycux cs efhyfezfvf y d wtuv djgvhycegy x ",
@@ -40,39 +41,38 @@ public class TestCases {
     private static Integer threadId = 1;
 
     public static void main(String[] args) throws Exception {
-        DBWriteConnectionFactory dbWriteConn = new DBWriteConnectionFactory(database);
-        DBReadConnectionFactory dbReadConn = new DBReadConnectionFactory(database);
+        DBConnectionFactory.setDBHost(database);
 
         // Test Homepage
-        HomePage homePage = new HomePage(dbReadConn);
+        HomePage homePage = new HomePage();
         homePage.execute();
 
         // Test Login
-        Login login = new Login(dbReadConn, username, password);
+        Login login = new Login(username, password);
         login.execute();
 
         // Test Tagsearch
-        TagSearch tagSearch = new TagSearch(dbReadConn, tagname);
+        TagSearch tagSearch = new TagSearch(tagname);
         tagSearch.execute();
 
         // Test AddEvent
-        AddEvent addEvent = new AddEvent(dbWriteConn, eventParameters, addressArr, threadId, userId);
+        AddEvent addEvent = new AddEvent(eventParameters, addressArr, threadId, userId);
         addEvent.execute();
 
         // Test AddPerson
-        AddPerson addPerson = new AddPerson(dbWriteConn, peopleParameters, addressArr, threadId);
+        AddPerson addPerson = new AddPerson(peopleParameters, addressArr, threadId);
         addPerson.execute();
 
         // Test EventDetail
-        EventDetail eventDetail = new EventDetail(dbReadConn, "12");
+        EventDetail eventDetail = new EventDetail("12");
         eventDetail.execute();
 
         // Test AddAttendee
-        AddAttendee addAttendee = new AddAttendee(dbWriteConn, "12", 1);
+        AddAttendee addAttendee = new AddAttendee("12", 1);
         addAttendee.execute();
 
         // Test PersonDetail
-        PersonDetail personDetail = new PersonDetail(dbReadConn, 20);
+        PersonDetail personDetail = new PersonDetail(20);
         personDetail.execute();
     }
 }
