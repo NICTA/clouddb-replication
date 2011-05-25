@@ -34,11 +34,11 @@ public class DBConnectionFactory {
     private static final String DB_PASS = "olio";
     private static final String URL_STRING = "jdbc:mysql:replication://%s/%s?"
             + "user=%s&password=%s&autoReconnect=true&roundRobinLoadBalance=true";
-    private static final Integer MIN_IDLE = 5;
+    private static final Integer MAX_IDLE = -1;
     private static String connectionURL, dbhost;
-    private static Integer maxActive = 50;
+    private static Integer maxActive = -1;
 
-    public static void ensureConnection() {
+    public static void ensureConnection() throws SQLException {
         if (dbhost != null) {
             connectionURL = String.format(URL_STRING, dbhost,
                     DB_NAME, DB_USER, DB_PASS);
@@ -48,7 +48,7 @@ public class DBConnectionFactory {
             bds.setUsername(DB_USER);
             bds.setPassword(DB_PASS);
             bds.setMaxActive(maxActive);
-            bds.setMinIdle(MIN_IDLE);
+            bds.setMaxIdle(MAX_IDLE);
         }
     }
 
@@ -78,5 +78,12 @@ public class DBConnectionFactory {
 
     public static void setMaxActive(Integer num) {
         maxActive = num;
+    }
+
+    public static Integer getNumOfConnections() {
+        if (bds == null) {
+            return 0;
+        }
+        return bds.getNumActive() + bds.getNumIdle();
     }
 }
