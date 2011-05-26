@@ -96,28 +96,46 @@ public class AddPerson implements Operatable {
         Random generator = new Random(System.currentTimeMillis());
         String imagePrefix = String.valueOf(generator.nextInt(1000000000));
         try {
+            int img1Idx = -1;
             selectImages1Stmt.setString(1, imagePrefix + threadId + "person.jpg");
             selectImages1Stmt.executeQuery();
-
-            insertImages1Stmt.setString(1, imagePrefix + threadId + "person.jpg");
-            insertImages1Stmt.executeUpdate();
-            ResultSet insertImages1ResultSet = insertImages1Stmt.getGeneratedKeys();
-            int img1Idx = -1;
-            if (insertImages1ResultSet.next()) {
-                img1Idx = insertImages1ResultSet.getInt(1);
+            ResultSet selectImages1ResultSet = selectImages1Stmt.executeQuery();
+            if (selectImages1ResultSet.next()) {
+                img1Idx = selectImages1ResultSet.getInt(1);
+            } else {
+                insertImages1Stmt.setString(1, imagePrefix + threadId + "person.jpg");
+                insertImages1Stmt.executeUpdate();
+                ResultSet insertImages1ResultSet = insertImages1Stmt.getGeneratedKeys();
+                if (insertImages1ResultSet.next()) {
+                    img1Idx = insertImages1ResultSet.getInt(1);
+                }
+                insertImages1ResultSet.close();
             }
-            insertImages1ResultSet.close();
+            selectImages1ResultSet.close();
 
+            boolean imagesThumbExisted = false;
             selectImages2Stmt.setInt(1, img1Idx);
             selectImages2Stmt.executeQuery();
-
+            ResultSet selectImages2ResultSet = selectImages2Stmt.executeQuery();
+            if (selectImages2ResultSet.next()) {
+                imagesThumbExisted = true;
+            }
+            selectImages2ResultSet.close();
             selectImages3Stmt.setString(1, imagePrefix + threadId + "persont.jpg");
             selectImages3Stmt.executeQuery();
+            ResultSet selectImages3ResultSet = selectImages3Stmt.executeQuery();
+            if (selectImages3ResultSet.next()) {
+                imagesThumbExisted = true;
+            }
+            selectImages3ResultSet.close();
 
-            insertImages2Stmt.setString(1, imagePrefix + threadId + "persont.jpg");
-            insertImages2Stmt.setInt(2, img1Idx);
-            insertImages2Stmt.executeUpdate();
+            if (!imagesThumbExisted) {
+                insertImages2Stmt.setString(1, imagePrefix + threadId + "persont.jpg");
+                insertImages2Stmt.setInt(2, img1Idx);
+                insertImages2Stmt.executeUpdate();
+            }
 
+            int addrIdx = -1;
             insertAddressesStmt.setString(1, addressArr[2]);
             insertAddressesStmt.setString(2, addressArr[4]);
             insertAddressesStmt.setBigDecimal(3, new java.math.BigDecimal(33.0));
@@ -128,7 +146,6 @@ public class AddPerson implements Operatable {
             insertAddressesStmt.setString(8, addressArr[3]);
             insertAddressesStmt.executeUpdate();
             ResultSet insertAddressesResultSet = insertAddressesStmt.getGeneratedKeys();
-            int addrIdx = -1;
             if (insertAddressesResultSet.next()) {
                 addrIdx = insertAddressesResultSet.getInt(1);
             }
@@ -139,11 +156,13 @@ public class AddPerson implements Operatable {
             ResultSet selectUsersResultSet = selectUsersStmt.executeQuery();
             if (selectUsersResultSet.next()) {
                 userExisted = true;
-                message = "The transaction is cancelled due to duplicated user.";
             }
             selectUsersResultSet.close();
 
-            if (!userExisted) {
+            if (userExisted) {
+                conn.rollback();
+                message = "The transaction is cancelled due to duplicated user.";
+            } else {
                 insertUsersStmt.setInt(1, img1Idx);
                 insertUsersStmt.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
                 insertUsersStmt.setTimestamp(3, new java.sql.Timestamp(System.currentTimeMillis()));

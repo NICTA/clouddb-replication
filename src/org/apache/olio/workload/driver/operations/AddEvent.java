@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Level;
@@ -133,6 +134,7 @@ public class AddEvent implements Operatable {
         List<String> tagList = java.util.Arrays.asList(parameters[10].split(" "));
         Integer timeOffset = generator.nextInt(630720000);
         try {
+            int addrIdx = -1;
             insertAddressesStmt.setString(1, addressArr[2]);
             insertAddressesStmt.setString(2, addressArr[4]);
             insertAddressesStmt.setBigDecimal(3, new java.math.BigDecimal(33.0));
@@ -143,46 +145,68 @@ public class AddEvent implements Operatable {
             insertAddressesStmt.setString(8, addressArr[3]);
             insertAddressesStmt.executeUpdate();
             ResultSet insertAddressesResultSet = insertAddressesStmt.getGeneratedKeys();
-            int addrIdx = -1;
             if (insertAddressesResultSet.next()) {
                 addrIdx = insertAddressesResultSet.getInt(1);
             }
             insertAddressesResultSet.close();
 
+            int img1Idx = -1;
             selectImages1Stmt.setString(1, imagePrefix + threadId + "event.jpg");
             selectImages1Stmt.executeQuery();
-
-            insertImages1Stmt.setString(1, imagePrefix + threadId + "event.jpg");
-            insertImages1Stmt.executeUpdate();
-            ResultSet insertImages1ResultSet = insertImages1Stmt.getGeneratedKeys();
-            int img1Idx = -1;
-            if (insertImages1ResultSet.next()) {
-                img1Idx = insertImages1ResultSet.getInt(1);
+            ResultSet selectImages1ResultSet = selectImages1Stmt.executeQuery();
+            if (selectImages1ResultSet.next()) {
+                img1Idx = selectImages1ResultSet.getInt(1);
+            } else {
+                insertImages1Stmt.setString(1, imagePrefix + threadId + "event.jpg");
+                insertImages1Stmt.executeUpdate();
+                ResultSet insertImages1ResultSet = insertImages1Stmt.getGeneratedKeys();
+                if (insertImages1ResultSet.next()) {
+                    img1Idx = insertImages1ResultSet.getInt(1);
+                }
+                insertImages1ResultSet.close();
             }
-            insertImages1ResultSet.close();
+            selectImages1ResultSet.close();
 
+            boolean imagesThumbExisted = false;
             selectImages2Stmt.setInt(1, img1Idx);
             selectImages2Stmt.executeQuery();
-
+            ResultSet selectImages2ResultSet = selectImages2Stmt.executeQuery();
+            if (selectImages2ResultSet.next()) {
+                imagesThumbExisted = true;
+            }
+            selectImages2ResultSet.close();
             selectImages3Stmt.setString(1, imagePrefix + threadId + "eventt.jpg");
             selectImages3Stmt.executeQuery();
+            ResultSet selectImages3ResultSet = selectImages3Stmt.executeQuery();
+            if (selectImages3ResultSet.next()) {
+                imagesThumbExisted = true;
+            }
+            selectImages3ResultSet.close();
 
-            insertImages2Stmt.setString(1, imagePrefix + threadId + "eventt.jpg");
-            insertImages2Stmt.setInt(2, img1Idx);
-            insertImages2Stmt.executeUpdate();
+            if (!imagesThumbExisted) {
+                insertImages2Stmt.setString(1, imagePrefix + threadId + "eventt.jpg");
+                insertImages2Stmt.setInt(2, img1Idx);
+                insertImages2Stmt.executeUpdate();
+            }
 
+            int docIdx = -1;
             selectDocumentsStmt.setString(1, documentPrefix + threadId + "event.pdf");
             selectDocumentsStmt.executeQuery();
-
-            insertDocumentsStmt.setString(1, documentPrefix + threadId + "event.pdf");
-            insertDocumentsStmt.executeUpdate();
-            ResultSet insertDocumentsResultSet = insertDocumentsStmt.getGeneratedKeys();
-            int docIdx = -1;
-            if (insertDocumentsResultSet.next()) {
-                docIdx = insertDocumentsResultSet.getInt(1);
+            ResultSet selectDocumentsResultSet = selectDocumentsStmt.executeQuery();
+            if (selectDocumentsResultSet.next()) {
+                img1Idx = selectDocumentsResultSet.getInt(1);
+            } else {
+                insertDocumentsStmt.setString(1, documentPrefix + threadId + "event.pdf");
+                insertDocumentsStmt.executeUpdate();
+                ResultSet insertDocumentsResultSet = insertDocumentsStmt.getGeneratedKeys();
+                if (insertDocumentsResultSet.next()) {
+                    docIdx = insertDocumentsResultSet.getInt(1);
+                }
+                insertDocumentsResultSet.close();
             }
-            insertDocumentsResultSet.close();
+            selectDocumentsResultSet.close();
 
+            int evnIdx = -1;
             insertEventsStmt.setInt(1, img1Idx);
             insertEventsStmt.setInt(2, docIdx);
             insertEventsStmt.setTimestamp(3, new java.sql.Timestamp(System.currentTimeMillis()));
@@ -196,48 +220,63 @@ public class AddEvent implements Operatable {
             insertEventsStmt.setDate(11, new java.sql.Date(System.currentTimeMillis() + timeOffset));
             insertEventsStmt.executeUpdate();
             ResultSet insertEventsResultSet = insertEventsStmt.getGeneratedKeys();
-            int evnIdx = -1;
             if (insertEventsResultSet.next()) {
                 evnIdx = insertEventsResultSet.getInt(1);
             }
             insertEventsResultSet.close();
 
+            boolean users1Existed = false;
             selectUsers1Stmt.setInt(1, userId);
             selectUsers1Stmt.executeQuery();
+            ResultSet selectUsers1ResultSet = selectUsers1Stmt.executeQuery();
+            if (selectUsers1ResultSet.next()) {
+                users1Existed = true;
+            }
+            selectUsers1ResultSet.close();
 
             boolean usersEventExisted = false;
-            selectUsers2Stmt.setInt(1, userId);
-            selectUsers2Stmt.setInt(2, evnIdx);
-            ResultSet selectUsers2ResultSet = selectUsers2Stmt.executeQuery();
-            if (selectUsers2ResultSet.next()) {
-                usersEventExisted = true;
+            if (users1Existed) {
+                selectUsers2Stmt.setInt(1, userId);
+                selectUsers2Stmt.setInt(2, evnIdx);
+                ResultSet selectUsers2ResultSet = selectUsers2Stmt.executeQuery();
+                if (selectUsers2ResultSet.next()) {
+                    usersEventExisted = true;
+                }
+                selectUsers2ResultSet.close();
             }
-            selectUsers2ResultSet.close();
 
             if (!usersEventExisted) {
                 insertEventsUsersStmt.setInt(1, evnIdx);
                 insertEventsUsersStmt.setInt(2, userId);
                 insertEventsUsersStmt.executeUpdate();
+            }
 
-                selectTaggingsStmt.setInt(1, evnIdx);
-                selectTaggingsStmt.executeQuery();
+            List<Integer> tagIds = new ArrayList<Integer>();
+            selectTaggingsStmt.setInt(1, evnIdx);
+            selectTaggingsStmt.executeQuery();
+            ResultSet selectTaggingsResultSet = selectTaggingsStmt.executeQuery();
+            while (selectTaggingsResultSet.next()) {
+                tagIds.add(selectTaggingsResultSet.getInt("tag_id"));
+            }
+            selectTaggingsResultSet.close();
 
-                int tagIdx = -1;
-                for (String tag : tagList) {
-                    selectTagsStmt.setString(1, tag);
-                    ResultSet selectTagsResultSet = selectTagsStmt.executeQuery();
-                    if (selectTagsResultSet.next()) {
-                        tagIdx = selectTagsResultSet.getInt("id");
-                    }
-                    selectTagsResultSet.close();
+            int tagIdx = -1;
+            for (String tag : tagList) {
+                selectTagsStmt.setString(1, tag);
+                ResultSet selectTagsResultSet = selectTagsStmt.executeQuery();
+                if (selectTagsResultSet.next()) {
+                    tagIdx = selectTagsResultSet.getInt("id");
+                }
+                selectTagsResultSet.close();
 
+                if (!tagIds.contains(Integer.valueOf(tagIdx))) {
                     insertTagsStmt.setInt(1, tagIdx);
                     insertTagsStmt.setInt(2, evnIdx);
                     insertTagsStmt.executeUpdate();
                 }
-
-                conn.commit();
             }
+
+            conn.commit();
         } catch (SQLException ex) {
             Logger.getLogger(AddEvent.class.getName()).log(Level.SEVERE, null, ex.getMessage());
             try {

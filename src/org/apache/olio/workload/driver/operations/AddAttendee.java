@@ -65,10 +65,19 @@ public class AddAttendee implements Operatable {
     public void execute() {
         prepare();
         try {
+            boolean usersExisted = false;
             selectUsersStmt.setInt(1, userId);
             selectUsersStmt.setInt(2, eventId);
-            ResultSet selectUsers2ResultSet = selectUsersStmt.executeQuery();
-            if (!selectUsers2ResultSet.next()) {
+            ResultSet selectUsersResultSet = selectUsersStmt.executeQuery();
+            if (selectUsersResultSet.next()) {
+                usersExisted = true;
+            }
+            selectUsersResultSet.close();
+
+            if (usersExisted) {
+                conn.rollback();
+                success = false;
+            } else {
                 insertEventsUsersStmt.setInt(1, eventId);
                 insertEventsUsersStmt.setInt(2, userId);
                 insertEventsUsersStmt.executeUpdate();
@@ -79,9 +88,14 @@ public class AddAttendee implements Operatable {
                 conn.commit();
                 success = true;
             }
-            selectUsers2ResultSet.close();
         } catch (SQLException ex) {
             Logger.getLogger(AddAttendee.class.getName()).log(Level.SEVERE, null, ex.getMessage());
+            try {
+                conn.rollback();
+                success = false;
+            } catch (SQLException ex1) {
+                Logger.getLogger(AddAttendee.class.getName()).log(Level.SEVERE, null, ex1);
+            }
         }
         cleanup();
     }
