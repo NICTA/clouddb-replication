@@ -98,7 +98,6 @@ public class AddPerson implements Operatable {
         try {
             int img1Idx = -1;
             selectImages1Stmt.setString(1, imagePrefix + threadId + "person.jpg");
-            selectImages1Stmt.executeQuery();
             ResultSet selectImages1ResultSet = selectImages1Stmt.executeQuery();
             if (selectImages1ResultSet.next()) {
                 img1Idx = selectImages1ResultSet.getInt(1);
@@ -116,14 +115,12 @@ public class AddPerson implements Operatable {
 
             boolean imagesThumbExisted = false;
             selectImages2Stmt.setInt(1, img1Idx);
-            selectImages2Stmt.executeQuery();
             ResultSet selectImages2ResultSet = selectImages2Stmt.executeQuery();
             if (selectImages2ResultSet.next()) {
                 imagesThumbExisted = true;
             }
             selectImages2ResultSet.close();
             selectImages3Stmt.setString(1, imagePrefix + threadId + "persont.jpg");
-            selectImages3Stmt.executeQuery();
             ResultSet selectImages3ResultSet = selectImages3Stmt.executeQuery();
             if (selectImages3ResultSet.next()) {
                 imagesThumbExisted = true;

@@ -152,7 +152,6 @@ public class AddEvent implements Operatable {
 
             int img1Idx = -1;
             selectImages1Stmt.setString(1, imagePrefix + threadId + "event.jpg");
-            selectImages1Stmt.executeQuery();
             ResultSet selectImages1ResultSet = selectImages1Stmt.executeQuery();
             if (selectImages1ResultSet.next()) {
                 img1Idx = selectImages1ResultSet.getInt(1);
@@ -170,14 +169,12 @@ public class AddEvent implements Operatable {
 
             boolean imagesThumbExisted = false;
             selectImages2Stmt.setInt(1, img1Idx);
-            selectImages2Stmt.executeQuery();
             ResultSet selectImages2ResultSet = selectImages2Stmt.executeQuery();
             if (selectImages2ResultSet.next()) {
                 imagesThumbExisted = true;
             }
             selectImages2ResultSet.close();
             selectImages3Stmt.setString(1, imagePrefix + threadId + "eventt.jpg");
-            selectImages3Stmt.executeQuery();
             ResultSet selectImages3ResultSet = selectImages3Stmt.executeQuery();
             if (selectImages3ResultSet.next()) {
                 imagesThumbExisted = true;
@@ -192,7 +189,6 @@ public class AddEvent implements Operatable {
 
             int docIdx = -1;
             selectDocumentsStmt.setString(1, documentPrefix + threadId + "event.pdf");
-            selectDocumentsStmt.executeQuery();
             ResultSet selectDocumentsResultSet = selectDocumentsStmt.executeQuery();
             if (selectDocumentsResultSet.next()) {
                 img1Idx = selectDocumentsResultSet.getInt(1);
@@ -229,7 +225,6 @@ public class AddEvent implements Operatable {
 
             boolean users1Existed = false;
             selectUsers1Stmt.setInt(1, userId);
-            selectUsers1Stmt.executeQuery();
             ResultSet selectUsers1ResultSet = selectUsers1Stmt.executeQuery();
             if (selectUsers1ResultSet.next()) {
                 users1Existed = true;
@@ -255,7 +250,6 @@ public class AddEvent implements Operatable {
 
             List<Integer> tagIds = new ArrayList<Integer>();
             selectTaggingsStmt.setInt(1, evnIdx);
-            selectTaggingsStmt.executeQuery();
             ResultSet selectTaggingsResultSet = selectTaggingsStmt.executeQuery();
             while (selectTaggingsResultSet.next()) {
                 tagIds.add(selectTaggingsResultSet.getInt("tag_id"));
