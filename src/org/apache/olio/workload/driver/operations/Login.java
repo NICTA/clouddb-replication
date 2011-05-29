@@ -72,22 +72,23 @@ public class Login implements Operatable {
             ResultSet selectUsers1ResultSet = selectUsers1Stmt.executeQuery();
             if (selectUsers1ResultSet.next()) {
                 loginIdx = -1;
-            } else {
-                selectUsers1ResultSet.close();
-                cleanup();
-                return;
             }
             selectUsers1ResultSet.close();
 
-            selectInvitesStmt.setInt(1, randomId);
-            selectInvitesStmt.executeQuery();
+            if (loginIdx == -1) {
+                selectInvitesStmt.setInt(1, randomId);
+                selectInvitesStmt.executeQuery();
 
-            selectEventsStmt.setInt(1, randomId);
-            selectEventsStmt.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
-            selectEventsStmt.executeQuery();
+                selectEventsStmt.setInt(1, randomId);
+                selectEventsStmt.setTimestamp(2, new java.sql.Timestamp(System.currentTimeMillis()));
+                selectEventsStmt.executeQuery();
 
-            selectUsers2Stmt.setInt(1, randomId);
-            selectUsers2Stmt.executeQuery();
+                selectUsers2Stmt.setInt(1, randomId);
+                selectUsers2Stmt.executeQuery();
+            } else {
+                cleanup();
+                return;
+            }
         } catch (SQLException ex) {
             Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }
