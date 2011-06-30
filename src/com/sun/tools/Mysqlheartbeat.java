@@ -143,13 +143,18 @@ public class Mysqlheartbeat {
             Thread writeThread = new Thread(new Runnable() {
 
                 public void run() {
+                    long startTime = 0;
                     while (runningFlag == true) {
                         try {
                             insertHeartbeatsStmt.setString(1,
                                     millisFormat.format(System.currentTimeMillis()));
                             insertHeartbeatsStmt.executeUpdate();
                             queryCount++;
-                            Thread.sleep(intervalWrite);
+                            startTime = System.currentTimeMillis();
+                            while (startTime + intervalWrite > 
+                                    System.currentTimeMillis()) {
+                                Thread.sleep(101);
+                            }
                         } catch (Exception ex) {
                             Logger.getLogger(Mysqlheartbeat.class.getName()).log(
                                     Level.SEVERE, null, ex.getMessage());
