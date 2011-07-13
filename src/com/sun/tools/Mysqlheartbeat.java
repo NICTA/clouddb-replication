@@ -108,13 +108,13 @@ public class Mysqlheartbeat {
                 "localhost", mysqlDb, serverUser, serverPassword);
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
-            logger.fine("Setting up mysql connection for " + toolName);
+            logger.log(Level.FINE, "Setting up mysql connection for {0}", toolName);
             if (conn == null || conn.isClosed()) {
                 conn = DriverManager.getConnection(url);
                 showSlaveStmt = conn.prepareStatement(SHOW_SLAVE);
                 insertHeartbeatsStmt = conn.prepareStatement(INSERT_HEARTBEATS);
                 selectHeartbeatsStmt = conn.prepareStatement(SELECT_HEARTBEATS);
-                logger.fine(toolName + " Configured");
+                logger.log(Level.FINE, "{0} Configured", toolName);
             }
         } catch (Exception ex) {
             Logger.getLogger(Mysqlheartbeat.class.getName()).log(Level.SEVERE, null, ex.getMessage());
@@ -125,7 +125,7 @@ public class Mysqlheartbeat {
     /**
      * Starts the MySQLHeartbeat.
      * @throws IOException Cannot execute the needed command
-     * @throws InterruptedException Interrupted waiting for the stats commmand
+     * @throws InterruptedException Interrupted waiting for the stats command
      */
     @Start
     public void start() throws IOException, InterruptedException {
@@ -139,8 +139,8 @@ public class Mysqlheartbeat {
                     Level.SEVERE, null, ex.getMessage());
         }
         if (isMaster) {
-            logger.fine(toolName + " Started with INSERT" + " in start method");
-            Thread writeThread = new Thread(new Runnable() {
+            logger.log(Level.FINE,"{0}" + " Started with INSERT in start method", toolName);
+            writeThread = new Thread(new Runnable() {
 
                 public void run() {
                     long startTime = 0;
@@ -151,9 +151,9 @@ public class Mysqlheartbeat {
                             insertHeartbeatsStmt.executeUpdate();
                             queryCount++;
                             startTime = System.currentTimeMillis();
-                            while (startTime + intervalWrite > 
+                            while (startTime + Math.round(intervalWrite * (1 - 0.1)) > 
                                     System.currentTimeMillis()) {
-                                Thread.sleep(101);
+                                Thread.sleep(Math.round(intervalWrite*0.1));
                             }
                         } catch (Exception ex) {
                             Logger.getLogger(Mysqlheartbeat.class.getName()).log(
@@ -209,7 +209,7 @@ public class Mysqlheartbeat {
     }
 
     /**
-     * Get final report by diffing the two time.
+     * Get final report by differing the two time.
      */
     @Postprocess
     public void getReport() {
