@@ -67,14 +67,15 @@ public class UIDriver {
     private String selectedEvent;
     private int personsAdded = 0;
     private int loadedUsers;
+    private int users;
     private HashSet<String> cachedURLs = new HashSet<String>();
     private StringBuilder tags = new StringBuilder();
     private LinkedHashSet<Integer> tagSet = new LinkedHashSet<Integer>(7);
 
     public UIDriver() throws XPathExpressionException, PropertyVetoException, SQLException, ClassNotFoundException {
         ctx = DriverContext.getContext();
-        int scale = ctx.getScale();
-        ScaleFactors.setActiveUsers(scale);
+        users = ctx.getScale();
+        ScaleFactors.setActiveUsers(users);
 
         random = ctx.getRandom();
 
@@ -85,9 +86,9 @@ public class UIDriver {
         int loadedScale = Integer.parseInt(
                 ctx.getXPathValue("/olio/dbServer/scale"));
         loadedUsers = ScaleFactors.USERS_RATIO * loadedScale;
-        if (scale > loadedScale) {
+        if (users > loadedScale) {
             throw new FatalException("Data loaded only for " + loadedScale
-                    + " concurrent users. Run is set for " + scale
+                    + " concurrent users. Run is set for " + users
                     + " concurrent users. Please load for enough concurrent "
                     + "users. Run terminating!");
         }
@@ -108,6 +109,11 @@ public class UIDriver {
     max90th = 1,
     timing = Timing.MANUAL)
     public void doHomePage() throws IOException {
+        if (users == 1) {
+            ctx.recordTime();
+            ctx.pauseTime();
+            return;
+        }
         HomePage homePage = new HomePage();
         ctx.recordTime();
         homePage.execute();
@@ -120,6 +126,12 @@ public class UIDriver {
     max90th = 1,
     timing = Timing.MANUAL)
     public void doLogin() throws IOException, Exception {
+        if (users == 1) {
+            ctx.recordTime();
+            ctx.pauseTime();
+            return;
+        }
+
         if (isLoggedOn) {
             doLogout();
         }
@@ -143,6 +155,12 @@ public class UIDriver {
     max90th = 1,
     timing = Timing.MANUAL)
     public void doLogout() throws IOException {
+        if (users == 1) {
+            ctx.recordTime();
+            ctx.pauseTime();
+            return;
+        }
+
         if (isLoggedOn) {
             isLoggedOn = false;
             username = null;
@@ -154,6 +172,12 @@ public class UIDriver {
     max90th = 2,
     timing = Timing.MANUAL)
     public void doTagSearch() throws IOException {
+        if (users == 1) {
+            ctx.recordTime();
+            ctx.pauseTime();
+            return;
+        }
+
         String tag = RandomUtil.randomTagName(random);
 
         TagSearch tagSearch = new TagSearch(tag);
@@ -176,6 +200,12 @@ public class UIDriver {
     truncateAtMin = false,
     cycleDeviation = 2)
     public void doAddEvent() throws Exception {
+        if (users == 1) {
+            ctx.recordTime();
+            ctx.pauseTime();
+            return;
+        }
+
         int userId = randomId;
         if (!isLoggedOn) {
             userId = selectUserID();
@@ -207,6 +237,12 @@ public class UIDriver {
     truncateAtMin = false,
     cycleDeviation = 2)
     public void doAddPerson() throws Exception {
+        if (users == 1) {
+            ctx.recordTime();
+            ctx.pauseTime();
+            return;
+        }
+
         if (isLoggedOn) {
             doLogout();
         }
@@ -233,6 +269,12 @@ public class UIDriver {
     max90th = 2,
     timing = Timing.MANUAL)
     public void doEventDetail() throws Exception {
+        if (users == 1) {
+            ctx.recordTime();
+            ctx.pauseTime();
+            return;
+        }
+
         //select random event
         if (selectedEvent == null) {
             HomePage homePage = new HomePage();
@@ -268,6 +310,12 @@ public class UIDriver {
     max90th = 2,
     timing = Timing.MANUAL)
     public void doPersonDetail() throws IOException {
+        if (users == 1) {
+            ctx.recordTime();
+            ctx.pauseTime();
+            return;
+        }
+
         int id = random.random(1, ScaleFactors.users);
         PersonDetail personDetail = new PersonDetail(id);
         ctx.recordTime();

@@ -151,7 +151,7 @@ public class Mysqlheartbeat {
                             insertHeartbeatsStmt.executeUpdate();
                             queryCount++;
                             startTime = System.currentTimeMillis();
-                            while (startTime + Math.round(intervalWrite * (1 - 0.1)) > 
+                            while (startTime + intervalWrite > 
                                     System.currentTimeMillis()) {
                                 Thread.sleep(Math.round(intervalWrite*0.1));
                             }
