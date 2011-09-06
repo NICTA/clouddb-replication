@@ -53,7 +53,7 @@ mix = {
     @Row({1, 1, 1, 1, 1, 0, 0}), // Add Person
     @Row({1, 1, 1, 1, 1, 0, 0}) // Add Event
 })
-@NegativeExponential(cycleType = CycleType.CYCLETIME,
+@NegativeExponential(cycleType = CycleType.THINKTIME,
 cycleMean = 5000,
 cycleDeviation = 2)
 public class UIDriver {
@@ -194,7 +194,7 @@ public class UIDriver {
     @BenchmarkOperation(name = "AddEvent",
     max90th = 4,
     timing = Timing.MANUAL)
-    @NegativeExponential(cycleType = CycleType.CYCLETIME,
+    @NegativeExponential(cycleType = CycleType.THINKTIME,
     cycleMean = 5000,
     cycleMin = 3000,
     truncateAtMin = false,
@@ -231,7 +231,7 @@ public class UIDriver {
     @BenchmarkOperation(name = "AddPerson",
     max90th = 3,
     timing = Timing.MANUAL)
-    @NegativeExponential(cycleType = CycleType.CYCLETIME,
+    @NegativeExponential(cycleType = CycleType.THINKTIME,
     cycleMean = 5000,
     cycleMin = 2000,
     truncateAtMin = false,
