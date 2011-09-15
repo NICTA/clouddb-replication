@@ -33,7 +33,7 @@ public class DBConnectionFactory {
     private static final String DB_USER = "olio";
     private static final String DB_PASS = "olio";
     private static final String URL_STRING = "jdbc:mysql:replication://%s/%s?"
-            + "user=%s&password=%s&autoReconnect=true&roundRobinLoadBalance=true";
+            + "user=%s&password=%s&autoReconnect=true&roundRobinLoadBalance=true&useLocalSessionState=true";
     private static final Integer MAX_IDLE = -1;
     private static String connectionURL, dbhost;
     private static Integer maxActive = -1;
