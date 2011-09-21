@@ -58,7 +58,7 @@ public class Mysqlheartbeat {
     // Strings
     private static final String SHOW_SLAVE = "SHOW SLAVE STATUS;";
     private static final String INSERT_HEARTBEATS = "SET SESSION binlog_format = 'STATEMENT'; "
-            + "INSERT INTO heartbeats(sys_mill, db_micro) VALUES (?, now_microsec());";
+            + "INSERT INTO heartbeats(sys_mill, db_micro) VALUES (?, now_microsec()) /* HeartbeatOperation */;";
     private static final String SELECT_HEARTBEATS = "SELECT * FROM heartbeats "
             + "ORDER BY sys_mill DESC;";
     // Statements

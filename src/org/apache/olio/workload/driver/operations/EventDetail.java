@@ -81,7 +81,8 @@ public class EventDetail implements Operatable {
             selectImagesStmt = conn.prepareStatement(SELECT_IMAGES + SUFFIX_NAME);
             selectDocumentsStmt = conn.prepareStatement(SELECT_DOCUMENTS + SUFFIX_NAME);
             selectCommentsStmt = conn.prepareStatement(SELECT_COMMENTS + SUFFIX_NAME);
-            selectUsers1Stmt = conn.prepareStatement(SELECT_USERS1 + SUFFIX_NAME);
+            // selectUsers1Stmt is defined in execute().
+            selectUsers1Stmt = null;
             selectAddressesStmt = conn.prepareStatement(SELECT_ADDRESSES + SUFFIX_NAME);
             selectUsers2Stmt = conn.prepareStatement(SELECT_USERS2 + SUFFIX_NAME);
             countTagsStmt = conn.prepareStatement(COUNT_TAGS + SUFFIX_NAME);
@@ -125,7 +126,7 @@ public class EventDetail implements Operatable {
                     userIdList += ",?";
                 }
                 String selectUsers1Replaced = SELECT_USERS1.replace("#USER_ID_LIST#", userIdList);
-                selectUsers1Stmt = conn.prepareStatement(selectUsers1Replaced);
+                selectUsers1Stmt = conn.prepareStatement(selectUsers1Replaced + SUFFIX_NAME);
                 for (int i = 0; i < userIds.size(); i++) {
                     selectUsers1Stmt.setInt(i + 1, userIds.get(i));
                 }
