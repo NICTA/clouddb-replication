@@ -22,6 +22,8 @@ import org.apache.olio.workload.driver.common.Operatable;
 public class EventDetail implements Operatable {
 
     // Strings
+    private static final String CLASS_NAME = EventDetail.class.getSimpleName() + "Operation";
+    private static final String SUFFIX_NAME = " /* " + CLASS_NAME + " */";
     private static final String SELECT_EVENTS = "SELECT * FROM `events` "
             + "WHERE (`events`.`id` = ?)";
     private static final String SELECT_IMAGES = "SELECT * FROM `images` "
@@ -75,15 +77,15 @@ public class EventDetail implements Operatable {
 
     public void prepare() {
         try {
-            selectEventsStmt = conn.prepareStatement(SELECT_EVENTS);
-            selectImagesStmt = conn.prepareStatement(SELECT_IMAGES);
-            selectDocumentsStmt = conn.prepareStatement(SELECT_DOCUMENTS);
-            selectCommentsStmt = conn.prepareStatement(SELECT_COMMENTS);
-            selectUsers1Stmt = conn.prepareStatement(SELECT_USERS1);
-            selectAddressesStmt = conn.prepareStatement(SELECT_ADDRESSES);
-            selectUsers2Stmt = conn.prepareStatement(SELECT_USERS2);
-            countTagsStmt = conn.prepareStatement(COUNT_TAGS);
-            selectTagsStmt = conn.prepareStatement(SELECT_TAGS);
+            selectEventsStmt = conn.prepareStatement(SELECT_EVENTS + SUFFIX_NAME);
+            selectImagesStmt = conn.prepareStatement(SELECT_IMAGES + SUFFIX_NAME);
+            selectDocumentsStmt = conn.prepareStatement(SELECT_DOCUMENTS + SUFFIX_NAME);
+            selectCommentsStmt = conn.prepareStatement(SELECT_COMMENTS + SUFFIX_NAME);
+            selectUsers1Stmt = conn.prepareStatement(SELECT_USERS1 + SUFFIX_NAME);
+            selectAddressesStmt = conn.prepareStatement(SELECT_ADDRESSES + SUFFIX_NAME);
+            selectUsers2Stmt = conn.prepareStatement(SELECT_USERS2 + SUFFIX_NAME);
+            countTagsStmt = conn.prepareStatement(COUNT_TAGS + SUFFIX_NAME);
+            selectTagsStmt = conn.prepareStatement(SELECT_TAGS + SUFFIX_NAME);
         } catch (SQLException ex) {
             Logger.getLogger(EventDetail.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }

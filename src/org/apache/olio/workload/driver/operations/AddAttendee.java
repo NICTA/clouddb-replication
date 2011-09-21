@@ -20,11 +20,13 @@ import org.apache.olio.workload.driver.common.Operatable;
 public class AddAttendee implements Operatable {
 
     // Strings
+    private static final String CLASS_NAME = AddAttendee.class.getSimpleName() + "Operation";
+    private static final String SUFFIX_NAME = " /* " + CLASS_NAME + " */";
     private static final String SELECT_USERS = "SELECT `users`.id FROM `users`  "
             + "INNER JOIN `events_users` "
             + "ON `users`.id = `events_users`.user_id "
             + "WHERE (`users`.`id` = ?) "
-            + "AND (`events_users`.event_id = ? )  LIMIT 1;";
+            + "AND (`events_users`.event_id = ? )  LIMIT 1";
     private static final String INSERT_EVENTS_USERS = "INSERT INTO `events_users` "
             + "(`event_id`, `user_id`) VALUES (?, ?)";
     private static final String SELECT_USERS2 = "SELECT * FROM `users`  "
@@ -54,9 +56,9 @@ public class AddAttendee implements Operatable {
 
     public void prepare() {
         try {
-            selectUsersStmt = conn.prepareStatement(SELECT_USERS);
-            insertEventsUsersStmt = conn.prepareStatement(INSERT_EVENTS_USERS);
-            selectUsers2Stmt = conn.prepareStatement(SELECT_USERS2);
+            selectUsersStmt = conn.prepareStatement(SELECT_USERS + SUFFIX_NAME);
+            insertEventsUsersStmt = conn.prepareStatement(INSERT_EVENTS_USERS + SUFFIX_NAME);
+            selectUsers2Stmt = conn.prepareStatement(SELECT_USERS2 + SUFFIX_NAME);
         } catch (SQLException ex) {
             Logger.getLogger(AddAttendee.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }

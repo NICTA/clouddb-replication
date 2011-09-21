@@ -20,6 +20,8 @@ import org.apache.olio.workload.driver.common.Operatable;
 public class Login implements Operatable {
 
     // Strings
+    private static final String CLASS_NAME = Login.class.getSimpleName() + "Operation";
+    private static final String SUFFIX_NAME = " /* " + CLASS_NAME + " */";
     private static final String SELECT_USERS_1 = "SELECT * FROM `users` "
             + "WHERE (`users`.`username` = ? AND `users`.`password` = ?)  LIMIT 1";
     private static final String SELECT_INVITES = "SELECT * FROM `invites` "
@@ -55,10 +57,10 @@ public class Login implements Operatable {
     public void prepare() {
 
         try {
-            selectUsers1Stmt = conn.prepareStatement(SELECT_USERS_1);
-            selectInvitesStmt = conn.prepareStatement(SELECT_INVITES);
-            selectEventsStmt = conn.prepareStatement(SELECT_EVENTS);
-            selectUsers2Stmt = conn.prepareStatement(SELECT_USERS_2);
+            selectUsers1Stmt = conn.prepareStatement(SELECT_USERS_1 + SUFFIX_NAME);
+            selectInvitesStmt = conn.prepareStatement(SELECT_INVITES + SUFFIX_NAME);
+            selectEventsStmt = conn.prepareStatement(SELECT_EVENTS + SUFFIX_NAME);
+            selectUsers2Stmt = conn.prepareStatement(SELECT_USERS_2 + SUFFIX_NAME);
         } catch (SQLException ex) {
             Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }

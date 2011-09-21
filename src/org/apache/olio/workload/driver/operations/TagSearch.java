@@ -22,6 +22,8 @@ import org.apache.olio.workload.driver.common.Operatable;
 public class TagSearch implements Operatable {
 
     // Strings
+    private static final String CLASS_NAME = TagSearch.class.getSimpleName() + "Operation";
+    private static final String SUFFIX_NAME = " /* " + CLASS_NAME + " */";
     private static final String SELECT_EVENTS = "SELECT events.* "
             + "FROM events, tags, taggings "
             + "WHERE events.id = taggings.taggable_id "
@@ -51,8 +53,8 @@ public class TagSearch implements Operatable {
 
     public void prepare() {
         try {
-            selectEventsStmt = conn.prepareStatement(SELECT_EVENTS);
-            selectImagesStmt = conn.prepareStatement(SELECT_IMAGES);
+            selectEventsStmt = conn.prepareStatement(SELECT_EVENTS + SUFFIX_NAME);
+            selectImagesStmt = conn.prepareStatement(SELECT_IMAGES + SUFFIX_NAME);
         } catch (SQLException ex) {
             Logger.getLogger(TagSearch.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }

@@ -22,6 +22,8 @@ import org.apache.olio.workload.driver.common.Operatable;
 public class AddPerson implements Operatable {
 
     // Strings
+    private static final String CLASS_NAME = AddPerson.class.getSimpleName() + "Operation";
+    private static final String SUFFIX_NAME = " /* " + CLASS_NAME + " */";
     private static final String SELECT_IMAGES1 = "SELECT `images`.id FROM `images` "
             + "WHERE (`images`.`filename` = BINARY ?)  LIMIT 1";
     private static final String INSERT_IMAGES1 = "INSERT INTO `images` "
@@ -78,14 +80,14 @@ public class AddPerson implements Operatable {
 
     public void prepare() {
         try {
-            selectImages1Stmt = conn.prepareStatement(SELECT_IMAGES1);
-            insertImages1Stmt = conn.prepareStatement(INSERT_IMAGES1, Statement.RETURN_GENERATED_KEYS);
-            selectImages2Stmt = conn.prepareStatement(SELECT_IMAGES2);
-            selectImages3Stmt = conn.prepareStatement(SELECT_IMAGES3);
-            insertImages2Stmt = conn.prepareStatement(INSERT_IMAGES2, Statement.RETURN_GENERATED_KEYS);
-            insertAddressesStmt = conn.prepareStatement(INSERT_ADDRESSES, Statement.RETURN_GENERATED_KEYS);
-            selectUsersStmt = conn.prepareStatement(SELECT_USERS);
-            insertUsersStmt = conn.prepareStatement(INSERT_USERS, Statement.RETURN_GENERATED_KEYS);
+            selectImages1Stmt = conn.prepareStatement(SELECT_IMAGES1 + SUFFIX_NAME);
+            insertImages1Stmt = conn.prepareStatement(INSERT_IMAGES1 + SUFFIX_NAME, Statement.RETURN_GENERATED_KEYS);
+            selectImages2Stmt = conn.prepareStatement(SELECT_IMAGES2 + SUFFIX_NAME);
+            selectImages3Stmt = conn.prepareStatement(SELECT_IMAGES3 + SUFFIX_NAME);
+            insertImages2Stmt = conn.prepareStatement(INSERT_IMAGES2 + SUFFIX_NAME, Statement.RETURN_GENERATED_KEYS);
+            insertAddressesStmt = conn.prepareStatement(INSERT_ADDRESSES + SUFFIX_NAME, Statement.RETURN_GENERATED_KEYS);
+            selectUsersStmt = conn.prepareStatement(SELECT_USERS + SUFFIX_NAME);
+            insertUsersStmt = conn.prepareStatement(INSERT_USERS + SUFFIX_NAME, Statement.RETURN_GENERATED_KEYS);
         } catch (SQLException ex) {
             Logger.getLogger(AddPerson.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }

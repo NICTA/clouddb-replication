@@ -22,6 +22,8 @@ import org.apache.olio.workload.driver.common.Operatable;
 public class HomePage implements Operatable {
 
     // Strings
+    private static final String CLASS_NAME = HomePage.class.getSimpleName() + "Operation";
+    private static final String SUFFIX_NAME = " /* " + CLASS_NAME + " */";
     private static final String SELECT_EVENTS = "SELECT * FROM `events` "
             + "WHERE (event_date >= ?)  ORDER BY event_date LIMIT 0, 10";
     private static final String SELECT_ADDRESSES = "SELECT * FROM `addresses` "
@@ -58,11 +60,11 @@ public class HomePage implements Operatable {
 
     public void prepare() {
         try {
-            selectEventsStmt = conn.prepareStatement(SELECT_EVENTS);
-            selectAddressesStmt = conn.prepareStatement(SELECT_ADDRESSES);
-            selectImagesStmt = conn.prepareStatement(SELECT_IMAGES);
-            countEventsStmt = conn.prepareStatement(COUNT_EVENTS);
-            selectTagsStmt = conn.prepareStatement(SELECT_TAGS);
+            selectEventsStmt = conn.prepareStatement(SELECT_EVENTS + SUFFIX_NAME);
+            selectAddressesStmt = conn.prepareStatement(SELECT_ADDRESSES + SUFFIX_NAME);
+            selectImagesStmt = conn.prepareStatement(SELECT_IMAGES + SUFFIX_NAME);
+            countEventsStmt = conn.prepareStatement(COUNT_EVENTS + SUFFIX_NAME);
+            selectTagsStmt = conn.prepareStatement(SELECT_TAGS + SUFFIX_NAME);
         } catch (SQLException ex) {
             Logger.getLogger(HomePage.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }

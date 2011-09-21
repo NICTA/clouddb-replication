@@ -24,6 +24,8 @@ import org.apache.olio.workload.driver.common.Operatable;
 public class AddEvent implements Operatable {
 
     // Strings
+    private static final String CLASS_NAME = AddEvent.class.getSimpleName() + "Operation";
+    private static final String SUFFIX_NAME = " /* " + CLASS_NAME + " */";
     private static final String INSERT_ADDRESSES = "INSERT INTO `addresses` "
             + "(`city`, `zip`, `latitude`, `country`, `street1`, `street2`, `"
             + "longitude`, `state`) "
@@ -106,21 +108,21 @@ public class AddEvent implements Operatable {
 
     public void prepare() {
         try {
-            insertAddressesStmt = conn.prepareStatement(INSERT_ADDRESSES, Statement.RETURN_GENERATED_KEYS);
-            selectImages1Stmt = conn.prepareStatement(SELECT_IMAGES1);
-            insertImages1Stmt = conn.prepareStatement(INSERT_IMAGES1, Statement.RETURN_GENERATED_KEYS);
-            selectImages2Stmt = conn.prepareStatement(SELECT_IMAGES2);
-            selectImages3Stmt = conn.prepareStatement(SELECT_IMAGES3);
-            insertImages2Stmt = conn.prepareStatement(INSERT_IMAGES2, Statement.RETURN_GENERATED_KEYS);
-            selectDocumentsStmt = conn.prepareStatement(SELECT_DOCUMENTS);
-            insertDocumentsStmt = conn.prepareStatement(INSERT_DOCUMENTS, Statement.RETURN_GENERATED_KEYS);
-            insertEventsStmt = conn.prepareStatement(INSERT_EVENTS, Statement.RETURN_GENERATED_KEYS);
-            selectUsers1Stmt = conn.prepareStatement(SELECT_USERS1);
-            selectUsers2Stmt = conn.prepareStatement(SELECT_USERS2);
-            insertEventsUsersStmt = conn.prepareStatement(INSERT_EVENTS_USERS, Statement.RETURN_GENERATED_KEYS);
-            selectTaggingsStmt = conn.prepareStatement(SELECT_TAGGINGS);
-            selectTagsStmt = conn.prepareStatement(SELECT_TAGS);
-            insertTagsStmt = conn.prepareStatement(INSERT_TAGS, Statement.RETURN_GENERATED_KEYS);
+            insertAddressesStmt = conn.prepareStatement(INSERT_ADDRESSES + SUFFIX_NAME, Statement.RETURN_GENERATED_KEYS);
+            selectImages1Stmt = conn.prepareStatement(SELECT_IMAGES1 + SUFFIX_NAME);
+            insertImages1Stmt = conn.prepareStatement(INSERT_IMAGES1 + SUFFIX_NAME, Statement.RETURN_GENERATED_KEYS);
+            selectImages2Stmt = conn.prepareStatement(SELECT_IMAGES2 + SUFFIX_NAME);
+            selectImages3Stmt = conn.prepareStatement(SELECT_IMAGES3 + SUFFIX_NAME);
+            insertImages2Stmt = conn.prepareStatement(INSERT_IMAGES2 + SUFFIX_NAME, Statement.RETURN_GENERATED_KEYS);
+            selectDocumentsStmt = conn.prepareStatement(SELECT_DOCUMENTS + SUFFIX_NAME);
+            insertDocumentsStmt = conn.prepareStatement(INSERT_DOCUMENTS + SUFFIX_NAME, Statement.RETURN_GENERATED_KEYS);
+            insertEventsStmt = conn.prepareStatement(INSERT_EVENTS + SUFFIX_NAME, Statement.RETURN_GENERATED_KEYS);
+            selectUsers1Stmt = conn.prepareStatement(SELECT_USERS1 + SUFFIX_NAME);
+            selectUsers2Stmt = conn.prepareStatement(SELECT_USERS2 + SUFFIX_NAME);
+            insertEventsUsersStmt = conn.prepareStatement(INSERT_EVENTS_USERS + SUFFIX_NAME, Statement.RETURN_GENERATED_KEYS);
+            selectTaggingsStmt = conn.prepareStatement(SELECT_TAGGINGS + SUFFIX_NAME);
+            selectTagsStmt = conn.prepareStatement(SELECT_TAGS + SUFFIX_NAME);
+            insertTagsStmt = conn.prepareStatement(INSERT_TAGS + SUFFIX_NAME, Statement.RETURN_GENERATED_KEYS);
         } catch (SQLException ex) {
             Logger.getLogger(AddEvent.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }

@@ -22,6 +22,8 @@ import org.apache.olio.workload.driver.common.Operatable;
 public class PersonDetail implements Operatable {
 
     // Strings
+    private static final String CLASS_NAME = PersonDetail.class.getSimpleName() + "Operation";
+    private static final String SUFFIX_NAME = " /* " + CLASS_NAME + " */";
     private static final String SELECT_USERS1 = "SELECT * FROM `users` "
             + "WHERE (`users`.`id` = ?)";
     private static final String SELECT_ADDRESSES = "SELECT * FROM `addresses` "
@@ -67,14 +69,14 @@ public class PersonDetail implements Operatable {
 
     public void prepare() {
         try {
-            selectUsers1Stmt = conn.prepareStatement(SELECT_USERS1);
-            selectAddressesStmt = conn.prepareStatement(SELECT_ADDRESSES);
-            selectImagesStmt = conn.prepareStatement(SELECT_IMAGES);
-            selectEventsStmt = conn.prepareStatement(SELECT_EVENTS);
-            selectUsers2Stmt = conn.prepareStatement(SELECT_USERS2);
-            selectUsers3Stmt = conn.prepareStatement(SELECT_USERS3);
-            selectInvites1Stmt = conn.prepareStatement(SELECT_INVITES1);
-            selectInvites2Stmt = conn.prepareStatement(SELECT_INVITES2);
+            selectUsers1Stmt = conn.prepareStatement(SELECT_USERS1 + SUFFIX_NAME);
+            selectAddressesStmt = conn.prepareStatement(SELECT_ADDRESSES + SUFFIX_NAME);
+            selectImagesStmt = conn.prepareStatement(SELECT_IMAGES + SUFFIX_NAME);
+            selectEventsStmt = conn.prepareStatement(SELECT_EVENTS + SUFFIX_NAME);
+            selectUsers2Stmt = conn.prepareStatement(SELECT_USERS2 + SUFFIX_NAME);
+            selectUsers3Stmt = conn.prepareStatement(SELECT_USERS3 + SUFFIX_NAME);
+            selectInvites1Stmt = conn.prepareStatement(SELECT_INVITES1 + SUFFIX_NAME);
+            selectInvites2Stmt = conn.prepareStatement(SELECT_INVITES2 + SUFFIX_NAME);
         } catch (SQLException ex) {
             Logger.getLogger(PersonDetail.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }
