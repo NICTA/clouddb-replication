@@ -1,4 +1,14 @@
 /* 
+ * Updates: (Copyright 2011 National ICT Australia Limited)
+ *     - Simplified benchmark by removing image and file uploader, name 
+ *       check and other web tier logics.
+ *     - Included detailed messages for transaction rollback.
+ *     - Use new matrix to change read/write ratio, thus we have more r/w 
+ *       ratio to choose, e.g. w10r90, w20r80, w30r70, w40r60, w50r50 and 
+ *       original ratio.
+ *     - Implemented connection pool.
+ *     - Changed from CycleType.CYCLETIME to CycleType.THINKTIME.
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -36,7 +46,7 @@ import java.util.*;
 import javax.xml.xpath.XPathExpressionException;
 
 @BenchmarkDefinition(name = "OlioDatabase",
-version = "0.3",
+version = "0.38",
 scaleName = "Concurrent Users")
 @BenchmarkDriver(name = "UIDriver",
 threadPerScale = 1)

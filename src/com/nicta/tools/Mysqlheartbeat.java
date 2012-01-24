@@ -16,8 +16,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * $Id: Mysqlheartbeat.java,v 0.0.0.1 2011/03/22 10:59AM $
  */
 package com.nicta.tools;
 
@@ -39,6 +37,8 @@ import java.util.logging.Logger;
 /**
  * MySQLHeartbeat implements a tool used for gathering the update delay from a
  * MySQL instance.
+ * 
+ * @author liang<Liang.Zhao@nicta.com.au>
  */
 public class Mysqlheartbeat {
 

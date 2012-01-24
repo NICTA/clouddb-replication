@@ -1,4 +1,6 @@
-/*
+/**
+ * Copyright 2011 National ICT Australia Limited
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -14,8 +16,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * $Id: DBConnectionFactory.java,v 0.0.0.1 2011/03/22 10:59AM $
  */
 package org.apache.olio.workload.driver.common;
 
@@ -24,6 +24,12 @@ import java.sql.SQLException;
 import org.apache.commons.dbcp.*;
 import java.util.logging.Logger;
 
+/**
+ * DBConnectionFactory implements a connection pool to deal with all database
+ * connections.
+ * 
+ * @author liang<Liang.Zhao@nicta.com.au>
+ */
 public class DBConnectionFactory {
 
     public static BasicDataSource bds;
