@@ -1,46 +1,38 @@
-/* The contents of this file are subject to the terms
- * of the Common Development and Distribution License
- * (the License). You may not use this file except in
- * compliance with the License.
+/**
+ * Copyright 2011 National ICT Australia Limited
  *
- * You can obtain a copy of the License at
- * http://www.sun.com/cddl/cddl.html or
- * install_dir/legal/LICENSE
- * See the License for the specific language governing
- * permission and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * When distributing Covered Code, include this CDDL
- * Header Notice in each file and include the License file
- * at install_dir/legal/LICENSE.
- * If applicable, add the following below the CDDL Header,
- * with the fields enclosed by brackets [] replaced by
- * your own identifying information:
- * "Portions Copyrighted [year] [name of copyright owner]"
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * $Id: Mysqlstats.java,v 1.6 2009/11/13 23:33:39 akara Exp $
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
- * Copyright 2008-2009 Sun Microsystems Inc. All Rights Reserved
+ * $Id: Mysqlheartbeat.java,v 0.0.0.1 2011/03/22 10:59AM $
  */
 package com.nicta.tools;
 
-import com.sun.faban.harness.ConfigurationException;
-import com.sun.faban.harness.Context;
-import com.sun.faban.harness.Configure;
+import com.sun.faban.harness.*;
 import com.sun.faban.harness.tools.Postprocess;
-import com.sun.faban.harness.Start;
-import com.sun.faban.harness.Stop;
-
 import com.sun.faban.harness.tools.ToolContext;
+
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
