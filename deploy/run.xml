@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+ * Updates: (Copyright 2011 National ICT Australia Limited)
+ *     - Simplified configuration UI by removing web tier config,
+ *       and keeping database config.
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+    NOTE: The code is adopted from Faban 
+	(http://faban.java.net). From folder 
+	samples/services/MysqlService/deploy
+
     Document   : toolsets.xml
     Created on : April 6, 2009, 1:30 PM
     Author     : Sheetal Patil

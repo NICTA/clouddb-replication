@@ -79,10 +79,9 @@ public class UIDriver {
 
         random = ctx.getRandom();
 
-        String[] dbhosts = ctx.getXPathValue(
-                "/olio/dbServer/fa:hostConfig/fa:host").split(" ");
-        String dbhost_list = new String();
-        
+        String connectionURL = ctx.getXPathValue("/olio/dbServer/connectURL");
+        String dbDriver = ctx.getXPathValue("/olio/dbServer/dbDriver");
+
         int loadedScale = Integer.parseInt(
                 ctx.getXPathValue("/olio/dbServer/scale"));
         loadedUsers = ScaleFactors.USERS_RATIO * loadedScale;
@@ -93,13 +92,8 @@ public class UIDriver {
                     + "users. Run terminating!");
         }
 
-
-        for (int i = 0; i < dbhosts.length - 1; i++) {
-            dbhost_list += dbhosts[i] + ",";
-        }
-        dbhost_list += dbhosts[dbhosts.length - 1];
-
-        DBConnectionFactory.setDBHost(dbhost_list);
+        DBConnectionFactory.setDbDriver(dbDriver);
+        DBConnectionFactory.setConnectionURL(connectionURL);
         DBConnectionFactory.setMaxActive(-1);
 
         isLoggedOn = false;

@@ -21,7 +21,7 @@
  *
  * Copyright 2008-2009 Sun Microsystems Inc. All Rights Reserved
  */
-package com.sun.tools;
+package com.nicta.tools;
 
 import com.sun.faban.harness.ConfigurationException;
 import com.sun.faban.harness.Context;

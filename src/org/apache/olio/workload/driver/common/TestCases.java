@@ -4,7 +4,6 @@
  */
 package org.apache.olio.workload.driver.common;
 
-import java.sql.Connection;
 import org.apache.olio.workload.driver.operations.AddAttendee;
 import org.apache.olio.workload.driver.operations.AddEvent;
 import org.apache.olio.workload.driver.operations.AddPerson;
@@ -41,8 +40,7 @@ public class TestCases {
     private static Integer threadId = 1;
 
     public static void main(String[] args) throws Exception {
-        DBConnectionFactory.setDBHost(database);
-
+        
         // Test Homepage
         HomePage homePage = new HomePage();
         homePage.execute();

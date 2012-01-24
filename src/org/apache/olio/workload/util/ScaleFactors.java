@@ -1,4 +1,7 @@
 /*
+ * Updates: (Copyright 2011 National ICT Australia Limited)
+ *     - Allowing benchmark to scale beyond its minimum number.
+ * 
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -44,6 +47,10 @@ public class ScaleFactors {
      * @param userCount
      */
     public static void setActiveUsers(int userCount) {
+    /**
+     * Allows benchmark to scale back to 1 concurrent user.
+     * -- Liang
+     */
 //      if (userCount < 25) {
 //          logger.warning("Trying to load for " + userCount + " concurrent " +
 //                  "users which is below the minimum of 25 users. " +

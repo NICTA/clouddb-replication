@@ -29,24 +29,16 @@ public class DBConnectionFactory {
     public static BasicDataSource bds;
     private static Logger logger =
             Logger.getLogger(DBConnectionFactory.class.getName());
-    private static final String DB_NAME = "olio";
-    private static final String DB_USER = "olio";
-    private static final String DB_PASS = "olio";
-    private static final String URL_STRING = "jdbc:mysql:replication://%s/%s?"
-            + "user=%s&password=%s&autoReconnect=true&roundRobinLoadBalance=true&useLocalSessionState=true";
+    private static String connectionURL = null;
+    private static String dbDriver = null;
     private static final Integer MAX_IDLE = -1;
-    private static String connectionURL, dbhost;
     private static Integer maxActive = -1;
 
     public static void ensureConnection() throws SQLException {
-        if (dbhost != null) {
-            connectionURL = String.format(URL_STRING, dbhost,
-                    DB_NAME, DB_USER, DB_PASS);
+        if (connectionURL != null && dbDriver != null) {
             bds = new BasicDataSource();
-            bds.setDriverClassName("com.mysql.jdbc.ReplicationDriver");
+            bds.setDriverClassName(dbDriver);
             bds.setUrl(connectionURL);
-            bds.setUsername(DB_USER);
-            bds.setPassword(DB_PASS);
             bds.setMaxActive(maxActive);
             bds.setMaxIdle(MAX_IDLE);
         }
@@ -72,8 +64,12 @@ public class DBConnectionFactory {
         return conn;
     }
 
-    public static void setDBHost(String hostList) {
-        dbhost = hostList;
+    public static void setDbDriver(String driver) {
+        dbDriver = driver;
+    }
+
+    public static void setConnectionURL(String connURL) {
+        connectionURL = connURL;
     }
 
     public static void setMaxActive(Integer num) {

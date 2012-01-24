@@ -1,4 +1,9 @@
 #!/bin/sh
+#
+#   NOTE: The code is adopted from Faban 
+#	(http://faban.java.net).From folder 
+#   samples/services/MysqlService/bin
+
 
 if [ $# -ne 3 ]
 then
