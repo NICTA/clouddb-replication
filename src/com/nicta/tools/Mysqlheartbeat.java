@@ -22,11 +22,13 @@ package com.nicta.tools;
 import com.sun.faban.harness.*;
 import com.sun.faban.harness.tools.Postprocess;
 import com.sun.faban.harness.tools.ToolContext;
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,14 +39,16 @@ import java.util.logging.Logger;
 /**
  * MySQLHeartbeat implements a tool used for gathering the update delay from a
  * MySQL instance.
- * 
+ *
  * @author liang<Liang.Zhao@nicta.com.au>
  */
 public class Mysqlheartbeat {
 
     private static Logger logger =
             Logger.getLogger(Mysqlheartbeat.class.getName());
-    /** The injected tool context. */
+    /**
+     * The injected tool context.
+     */
     @Context
     public ToolContext ctx;
     // Strings
@@ -58,8 +62,8 @@ public class Mysqlheartbeat {
     private PreparedStatement insertHeartbeatsStmt = null;
     private PreparedStatement selectHeartbeatsStmt = null;
     // Input
-    private Connection conn = null;
-    private String toolName, logfile;
+    private Connection startConn = null, stopConn = null;
+    private String toolName, logfile, url;
     private Integer intervalRead, intervalWrite;
     private Boolean isMaster = false;
     private Boolean runningFlag = true;
@@ -96,16 +100,13 @@ public class Mysqlheartbeat {
         }
 
         String mysqlDb = "heartbeats";
-        String url = String.format("jdbc:mysql://%s/%s?user=%s&password=%s&allowMultiQueries=true",
+        url = String.format("jdbc:mysql://%s/%s?user=%s&password=%s&allowMultiQueries=true",
                 "localhost", mysqlDb, serverUser, serverPassword);
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             logger.log(Level.FINE, "Setting up mysql connection for {0}", toolName);
-            if (conn == null || conn.isClosed()) {
-                conn = DriverManager.getConnection(url);
-                showSlaveStmt = conn.prepareStatement(SHOW_SLAVE);
-                insertHeartbeatsStmt = conn.prepareStatement(INSERT_HEARTBEATS);
-                selectHeartbeatsStmt = conn.prepareStatement(SELECT_HEARTBEATS);
+            if (startConn == null || startConn.isClosed()) {
+                startConn = DriverManager.getConnection(url);
                 logger.log(Level.FINE, "{0} Configured", toolName);
             }
         } catch (Exception ex) {
@@ -116,37 +117,40 @@ public class Mysqlheartbeat {
 
     /**
      * Starts the MySQLHeartbeat.
+     *
      * @throws IOException Cannot execute the needed command
      * @throws InterruptedException Interrupted waiting for the stats command
      */
     @Start
     public void start() throws IOException, InterruptedException {
         try {
+            showSlaveStmt = startConn.prepareStatement(SHOW_SLAVE);
             ResultSet showSlaveResultSet = showSlaveStmt.executeQuery();
             if (!showSlaveResultSet.next()) {
                 isMaster = true;
             }
-        } catch (SQLException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(Mysqlheartbeat.class.getName()).log(
                     Level.SEVERE, null, ex.getMessage());
         }
         if (isMaster) {
-            logger.log(Level.FINE,"{0}" + " Started with INSERT in start method", toolName);
+            logger.log(Level.FINE, "{0}" + " Started with INSERT in start method", toolName);
             writeThread = new Thread(new Runnable() {
 
                 public void run() {
                     long startTime = System.currentTimeMillis();
                     while (runningFlag == true) {
                         try {
+                            insertHeartbeatsStmt = startConn.prepareStatement(INSERT_HEARTBEATS);
                             insertHeartbeatsStmt.setString(1,
                                     millisFormat.format(System.currentTimeMillis()));
                             insertHeartbeatsStmt.executeUpdate();
                             queryCount++;
-                            while (startTime + intervalWrite > 
-                                    System.currentTimeMillis()) {
-                                Thread.sleep(Math.round(intervalWrite*0.1));
+                            while (startTime + intervalWrite
+                                    > System.currentTimeMillis()) {
+                                Thread.sleep(Math.round(intervalWrite * 0.1));
                             }
-							startTime += intervalWrite;
+                            startTime += intervalWrite;
                         } catch (Exception ex) {
                             Logger.getLogger(Mysqlheartbeat.class.getName()).log(
                                     Level.SEVERE, null, ex.getMessage());
@@ -168,6 +172,11 @@ public class Mysqlheartbeat {
         results = new ArrayList<MysqlheartbeatBean>();
         logger.fine(toolName + " Started with SELECT" + " in start method");
         try {
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            if (stopConn == null || stopConn.isClosed()) {
+                stopConn = DriverManager.getConnection(url);
+            }
+            selectHeartbeatsStmt = stopConn.prepareStatement(SELECT_HEARTBEATS);
             ResultSet selectHeartbeatsResultSet =
                     selectHeartbeatsStmt.executeQuery();
             while (selectHeartbeatsResultSet.next()) {
@@ -185,17 +194,11 @@ public class Mysqlheartbeat {
                     Level.SEVERE, null, ex.getMessage());
         }
         try {
-            if (!showSlaveStmt.isClosed()) {
-                showSlaveStmt.close();
-            }
-            if (!insertHeartbeatsStmt.isClosed()) {
-                insertHeartbeatsStmt.close();
-            }
             if (!selectHeartbeatsStmt.isClosed()) {
                 selectHeartbeatsStmt.close();
             }
-            conn.close();
-        } catch (SQLException ex) {
+            stopConn.close();
+        } catch (Exception ex) {
             Logger.getLogger(Mysqlheartbeat.class.getName()).log(Level.SEVERE, null, ex.getMessage());
         }
     }
