@@ -46,7 +46,7 @@ import java.util.*;
 import javax.xml.xpath.XPathExpressionException;
 
 @BenchmarkDefinition(name = "OlioDatabase",
-version = "0.38",
+version = "0.3.9",
 scaleName = "Concurrent Users")
 @BenchmarkDriver(name = "UIDriver",
 threadPerScale = 1)
