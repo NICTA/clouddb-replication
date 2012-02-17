@@ -44,7 +44,7 @@ import java.util.logging.Logger;
  */
 public class Mysqlheartbeat {
 
-    private static Logger logger =
+    private static final Logger logger =
             Logger.getLogger(Mysqlheartbeat.class.getName());
     /**
      * The injected tool context.
@@ -68,9 +68,7 @@ public class Mysqlheartbeat {
     private Boolean isMaster = false;
     private Boolean runningFlag = true;
     private SimpleDateFormat millisFormat =
-            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS000");
-    private SimpleDateFormat microsFormat =
-            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     // Output
     private Thread writeThread;
     private List<MysqlheartbeatBean> results = null;
@@ -137,13 +135,16 @@ public class Mysqlheartbeat {
             logger.log(Level.FINE, "{0}" + " Started with INSERT in start method", toolName);
             writeThread = new Thread(new Runnable() {
 
+                @Override
                 public void run() {
                     long startTime = System.currentTimeMillis();
                     while (runningFlag == true) {
                         try {
                             insertHeartbeatsStmt = startConn.prepareStatement(INSERT_HEARTBEATS);
+                            // Conver to micro second format
                             insertHeartbeatsStmt.setString(1,
-                                    millisFormat.format(System.currentTimeMillis()));
+                                    String.format("%s000", 
+                                    millisFormat.format(System.currentTimeMillis())));
                             insertHeartbeatsStmt.executeUpdate();
                             queryCount++;
                             while (startTime + intervalWrite
@@ -167,10 +168,10 @@ public class Mysqlheartbeat {
      */
     @Stop
     public void stop() throws IOException, InterruptedException {
-        logger.fine("Stopping tool " + toolName);
+        logger.log(Level.FINE, "Stopping tool {0}", toolName);
         runningFlag = false;
         results = new ArrayList<MysqlheartbeatBean>();
-        logger.fine(toolName + " Started with SELECT" + " in start method");
+        logger.log(Level.FINE,"{0}" + " Started with SELECT" + " in start method", toolName);
         try {
             Class.forName("com.mysql.jdbc.Driver").newInstance();
             if (stopConn == null || stopConn.isClosed()) {
@@ -185,9 +186,9 @@ public class Mysqlheartbeat {
                 results.add(
                         new MysqlheartbeatBean(
                         Long.valueOf(
-                        microsFormat.parse(sm.substring(0, 23)).getTime() + sm.substring(23)),
+                        millisFormat.parse(sm.substring(0, 23)).getTime() + sm.substring(23)),
                         Long.valueOf(
-                        microsFormat.parse(dm.substring(0, 23)).getTime() + dm.substring(23))));
+                        millisFormat.parse(dm.substring(0, 23)).getTime() + dm.substring(23))));
             }
         } catch (Exception ex) {
             Logger.getLogger(Mysqlheartbeat.class.getName()).log(
