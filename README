@@ -1,9 +1,37 @@
-This directory contains the source code for the Olio Rails workload
-and data generators. The directory structure is standard to Faban.
-The directories of interest (where source code resides) are bin, 
-deploy and src. 
+CloudDB Replication Benchmark
 
-To build, create 'build.properties' from the corresponding template and
+CloudDB Replication Benchmark is a database workload generator 
+based on Cloudstone/Olio(RoR) which aims of evaluating the 
+performance characteristics of database replication in virtualized 
+cloud environment. Using the database and different workloads of the 
+Cloudstone benchmark, the project targets to experimentally assess 
+the behavior of the master-slave database replication strategy on 
+Amazon EC2 platforms.
+
+In order to have the replication delay benchmark work properly, it 
+is suggested to have a NOW function in microsecond resolution. A 
+compiled file is included in another directory which contains all 
+possible scripts and archives for automatic deployment in cloud.
+http://bugs.mysql.com/bug.php?id=8523
+
+The project is inspired by Cloudstone project and Apache Olio
+http://radlab.cs.berkeley.edu/wiki/Projects/Cloudstone
+http://incubator.apache.org/olio/
+
+A few codes are adopted from Faban under CDDL
+http://java.net/projects/faban/
+
+This project is part of the CloudDB AutoAdmin project 
+http://cdbslaautoadmin.sourceforge.net/
+
+This directory contains the source code for the CloudDB Replication 
+Benchmark workload and data generators. The directory structure is 
+standard to Faban. The directories of interest (where source code 
+resides) are bin, deploy and src. 
+
+To build, create 'build.properties' from the corresponding template and 
+choose a right workload from src/org/apache/olio/workload/driver/
+UIDriver.java.wX0rY0, where wX0rY0 represents write/read ratio at X0:Y0, 
 execute 'ant deploy.jar'. Once the faban master is started, you can
 also automatically deploy the benchmark, by using 'ant deploy'.
 
@@ -21,15 +49,8 @@ An explanation of the directory structure follows:
 - The deploy directory contains the run parameters (run.xml) and Xforms
   configuration (config.xhtml). 
 
-- The src directory contains the source code for the driver, dbloader
-  and fileloader. Corresponding shell-script wrappers reside in 'bin'.
+- The src directory contains the source code and different workload 
+  for the driver, dbloader and fileloader. Corresponding shell-script 
+  wrappers reside in 'bin'.
 
-- The resources directory contains static files used by the file loader.
-
-- The config and lib directories hold standard faban content.
-
-- The sbin directory contains utilities to run a benchmark outside
-  the Faban harness. This will not be packaged into the deployment
-  jar files. Benchmark-specific scripts and binaries should be places
-  into the bin directory.
-
+- The lib directories hold standard faban content.
