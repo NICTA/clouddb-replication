@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    NOTE: The code is adopted from Faban 
+    (http://faban.java.net). From folder 
+    samples/services/MysqlService/deploy
+
+    Updates: (Copyright 2011 National ICT Australia Limited)
+    - Removed RailsService and MySQLService 
+    - Included MySQLService and Mysqlstats from Faban 
+      (http://faban.java.net) sample service codes
+    - Added Mysqlheartbeat for detecting replication delay
+
+    Document   : service-tools.xml
+    Created on : April 6, 2009, 1:26 PM
+    Author     : Sheetal Patil
+    Description:
+        Purpose of the document follows.
+-->
+<services-tools>
+    <service id="MySQLService">
+        <class>com.sun.services.MySQLService</class>
+    </service>
+    <tool id="Mysqlstats" service="MySQLService">
+        <class>com.sun.tools.Mysqlstats</class>
+    </tool>
+    <tool id="Mysqlheartbeat" service="MySQLService">
+        <class>com.nicta.tools.Mysqlheartbeat</class>
+    </tool>
+</services-tools>
