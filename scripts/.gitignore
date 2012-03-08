@@ -1,0 +1,3 @@
+deployment-kits/supports/*.pub
+deployment-kits/supports/*.pem
+deployment-kits/mysql-replication/install/dbadmin.pem.template

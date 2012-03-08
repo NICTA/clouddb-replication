@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+-->
+
+<olio>
+    <jvmConfig xmlns="http://faban.sunsource.net/ns/fabanharness">
+        <javaHome>/usr/lib/jvm/java-1.6.0-openjdk</javaHome>
+        <jvmOptions>-Xmx1g -Xms256m -XX:+DisableExplicitGC</jvmOptions>
+    </jvmConfig>
+    
+    <fa:runConfig definition="org.apache.olio.workload.driver.UIDriver" xmlns="http://faban.sunsource.net/ns/fabandriver" xmlns:fa="http://faban.sunsource.net/ns/faban" xmlns:fh="http://faban.sunsource.net/ns/fabanharness">
+        <fh:description>CloudDB AutoAdmin</fh:description>
+        <fh:timeSync>false</fh:timeSync>
+        
+        <fa:hostConfig>
+            <fa:host>#FABAN_HOST#</fa:host>
+            <fh:enabled>true</fh:enabled>
+            <fh:cpus>0</fh:cpus>
+            <fh:tools>diskstats; iostat -dkx 1; vmstat 1</fh:tools>
+            <fh:userCommands/>
+        </fa:hostConfig>
+        
+        <fa:scale>#NUM_OF_USER#</fa:scale>
+        
+        <fa:runControl>
+        	<fa:rampUp>600</fa:rampUp>
+        	<fa:steadyState>1200</fa:steadyState>
+        	<fa:rampDown>300</fa:rampDown>
+            <fa:variableLoad>#VARIABLE_LOAD#</fa:variableLoad>
+            <fa:variableLoadFile>/tmp/load.txt</fa:variableLoadFile>
+        </fa:runControl>
+        
+        <outputDir>/tmp</outputDir>
+        
+        <audit>false</audit>
+        <threadStart>
+            <delay>100</delay>
+            <simultaneous>yes</simultaneous>            
+            <parallel>yes</parallel>
+        </threadStart>
+        
+        <stats>
+            <maxRunTime>6</maxRunTime>
+            <interval>30</interval>
+        </stats>
+        
+        <runtimeStats enabled="false">
+            <interval>5</interval>
+        </runtimeStats>
+        
+        <driverConfig name="UIDriver">            
+            <agents>#NUM_OF_AGENT#</agents>            
+            <stats>
+                <interval>30</interval>
+            </stats>            
+            <runtimeStats target="9988"/>
+	    
+        </driverConfig>
+    </fa:runConfig>
+    <dbServer>
+        <fa:hostConfig xmlns="http://faban.sunsource.net/ns/fabanharness" xmlns:fa="http://faban.sunsource.net/ns/faban">
+            <fa:host>#DATABASE_HOST#</fa:host>
+            <enabled>true</enabled>
+            <cpus>0</cpus>
+            <tools>diskstats 1; vmstat 1; iostat -dkx 1; nicstat 1; tcpdump</tools>
+            <userCommands/>
+        </fa:hostConfig>
+        <dbDriver>#JDBC_DRIVER#</dbDriver>
+        <connectURL>#JDBC_CONNECTOR#//#DATABASE_SERVER#/olio?user=olio&amp;password=olio&amp;relaxAutoCommit=true&amp;sessionVariables=FOREIGN_KEY_CHECKS=0</connectURL>
+        <reloadDB>false</reloadDB>
+        <scale>#NUM_OF_SCALE#</scale>
+        <fh:service xmlns:fh="http://faban.sunsource.net/ns/fabanharness">
+            <fh:name>MySQLService</fh:name>
+            <fh:tools>Mysqlstats; Mysqlheartbeat</fh:tools>
+            <fh:restart>false</fh:restart>
+            <fh:config>
+                <serverHome>/usr/local/mysql/</serverHome>
+                <user>olio</user>
+                <password>olio</password>
+                <confPath>/etc/my.cnf</confPath>
+                <admin>user</admin>
+                <adminpass></adminpass>
+                <interval-read>100</interval-read>
+                <interval-write>500</interval-write>
+             </fh:config>
+        </fh:service>
+    </dbServer>
+</olio>

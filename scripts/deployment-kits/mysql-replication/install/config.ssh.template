@@ -1,0 +1,19 @@
+Host localhost
+    IdentityFile  ~/.ssh/dbadmin.pem
+
+Host *.compute.amazonaws.com
+    IdentityFile  ~/.ssh/dbadmin.pem
+
+Host *.compute-1.amazonaws.com
+    IdentityFile  ~/.ssh/dbadmin.pem
+
+Host *.compute.internal
+    IdentityFile  ~/.ssh/dbadmin.pem
+
+Host *.compute-1.internal
+    IdentityFile  ~/.ssh/dbadmin.pem
+
+Host *
+    StrictHostKeyChecking no
+    KeepAlive             yes
+    TCPKeepAlive          yes

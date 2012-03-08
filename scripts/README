@@ -1,0 +1,22 @@
+************************************************************
+*                                                          *
+*                Cloudstone Auto Scripts                   *
+*                                                          *
+************************************************************
+
+This is a suite of configurations, scripts and packages to 
+run Cloudstone database benchmark on Amazon instances.
+
+analysis-kits   - includes several scripts for analyzing data
+		  generated during experiments.
+deployment-kits - includes whole package of customized Faban
+		  benchmark driver for MySQL databases (with
+		  different read/write ratios), microseconds 
+		  function for MySQL. Auto-deployment/data
+		  collection scripts and configurations.
+plot-kits	- includes scripts to draw figures for GnuPlot
+		  only partially done.
+
+                                                   Liang
+
+                                               Feb 07, 2012

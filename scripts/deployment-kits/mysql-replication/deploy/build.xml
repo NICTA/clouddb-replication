@@ -1,0 +1,45 @@
+<!--
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * 
+-->
+
+<project name="Olio Database Workload" default="deploy" basedir=".">
+
+    <property file="build.properties"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="buildlib.dir" value="${build.dir}/lib"/>
+    <property name="faban.libs" value="${faban.home}/lib"/>
+    <property name="faban.classes" value="${faban.home}/master/webapps/faban/WEB-INF/classes"/>
+    <property name="deploy.packages" value="../../packages"/>
+
+    <path id="taskclasspath">
+        <fileset dir="${faban.home}/ant/lib" includes="*.jar"/>
+        <fileset dir="${faban.libs}" includes="*.jar"/>
+    </path>
+
+    <taskdef name="deploy" classname="com.sun.faban.harness.util.DeployTask">
+        <classpath refid="taskclasspath"/>
+    </taskdef>
+
+    <target name="deploy" 
+        description="Deploys benchmark on the Faban harness">
+        <deploy url="${faban.url}"
+            jar="${deploy.packages}/${bench.shortname}.jar"
+            user="${deploy.user}" password="${deploy.password}"
+            clearConfig="${deploy.clearconfig}"/>
+    </target>
+</project>
