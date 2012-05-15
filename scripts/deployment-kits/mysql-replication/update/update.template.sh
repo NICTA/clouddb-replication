@@ -43,7 +43,6 @@ install_faban_sys()
 {
   # Upload and untar Faban
   ssh root@$1 "cd ~/faban/master/bin \
-  && export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk \
   && ./shutdown.sh \
   && killall java \
   && rm -fr ~/faban"

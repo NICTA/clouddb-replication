@@ -25,6 +25,10 @@
 #We need a private key for EC2 access in this folder.
 #Rename the key to dbadmin.pem.template, or change script to suit 
 #your need.
+#
+#This script is for Ubuntu EC2 instances. For other Linux distributions,
+#please make corresponding changes.
+#
 
 if [ "${#}" -lt "2" ]; then
   echo "This script takes addresses of Ubuntu instances to install "

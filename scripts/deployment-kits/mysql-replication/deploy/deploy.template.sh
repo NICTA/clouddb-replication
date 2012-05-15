@@ -115,17 +115,23 @@ deploy_master_database()
 deploy_master_faban()
 {
   # Prepare profile for Faban master
+  num_host_list=0
   for mysql in $MYSQL_INSTANCE_RUN; do
     db_host_list=$db_host_list"$mysql "
+    num_host_list=$[$num_host_list+1]
   done
   for mysql in $MYSQL_INSTANCE_PAUSE; do
     db_host_list=$db_host_list"$mysql "
+    num_host_list=$[$num_host_list+1]
   done
   db_host_list=`echo $db_host_list | sed -e 's/,$//'`
 
   for mysql in $MYSQL_INSTANCE_RUN; do
     db_serv_list=$db_serv_list"$mysql,"
   done
+  if [ "$num_host_list" -eq "1" ]; then
+    db_serv_list=$db_serv_list"$mysql,"
+  fi
   db_serv_list=`echo $db_serv_list | sed -e 's/,$//'`
 
   num_agent=0
@@ -152,7 +158,7 @@ deploy_master_faban()
   ## perl -p -i -e "s/#JDBC_CONNECTOR#/jdbc:mysql:replication:/" run.xml.OlioDriver && \
   ## perl -p -i -e "s/#DATABASE_SERVER#/$db_serv_list/" run.xml.OlioDriver && \
   ###
-  # Script snippet for using com.mysql.jdbc.ReplicationDriver driver
+  # Script snippet for using com.mysql.jdbc.Driver driver
   ## perl -p -i -e "s/#JDBC_DRIVER#/com.mysql.jdbc.Driver/" run.xml.OlioDriver && \
   ## perl -p -i -e "s/#JDBC_CONNECTOR#/jdbc:mysql:/" run.xml.OlioDriver && \
   ## perl -p -i -e "s/#DATABASE_SERVER#/$PROXY_ADDRESS_PORT/" run.xml.OlioDriver && \
@@ -164,16 +170,14 @@ deploy_master_faban()
   rm run.xml.OlioDriver
   scp -r load.txt.template root@$1:/tmp/load.txt
   # Staring Faban system
-  ssh root@$1 "export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk \
-  && ./faban/master/bin/startup.sh"
+  ssh root@$1 "./faban/master/bin/startup.sh"
 }
 
 deploy_agent_faban()
 {
   # Staring Faban system
   scp -r load.txt.template root@$1:/tmp/load.txt
-  ssh root@$1 "export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk \
-  && ./faban/bin/agent"
+  ssh root@$1 "./faban/bin/agent"
 }
 
 # Deploy Faban system

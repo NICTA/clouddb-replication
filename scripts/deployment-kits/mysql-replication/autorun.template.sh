@@ -109,20 +109,17 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>1; k=$[$k-$STEP])) do
 		check_errs $? "Deploy instances failed."
 		# Start test from command line
 		cd "$LOCATION"
-		task_name=`ssh root@${FABAN_INSTANCE[0]} "export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk \
-			&& ulimit -Hn 32768 \
+		task_name=`ssh root@${FABAN_INSTANCE[0]} "ulimit -Hn 32768 \
 			&& ulimit -Sn 32768 \
 			&& ~/faban/bin/fabancli submit OlioDriver dbadmin ~/faban/config/profiles/dbadmin/run.xml.OlioDriver"`
-		status=`ssh root@${FABAN_INSTANCE[0]} "export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk \
-			&& ~/faban/bin/fabancli status $task_name"`
+		status=`ssh root@${FABAN_INSTANCE[0]} "~/faban/bin/fabancli status $task_name"`
 		echo ".. (2/3) Start a new benchmark as $task_name, in the status of $status"
 		while [ "$status" == "STARTED" ]; do
 			for ((t=0; t<30; t++)) do
 				printf ".";
 				sleep 1;
 			done
-			status=`ssh root@${FABAN_INSTANCE[0]} "export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk \
-				&& ~/faban/bin/fabancli status $task_name"`
+			status=`ssh root@${FABAN_INSTANCE[0]} "~/faban/bin/fabancli status $task_name"`
 		done
 		printf "\n";
 		sleep 10

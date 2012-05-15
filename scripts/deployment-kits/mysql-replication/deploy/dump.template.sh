@@ -86,8 +86,7 @@ generate_database_dump()
   ssh root@$1 "cd ~/faban/benchmarks/OlioDriver \
   && jar xf OlioDriver.jar \
   && chmod +x ~/faban/benchmarks/OlioDriver/bin/*.*"
-  ssh root@$1 "export JAVA_HOME=/usr/lib/jvm/java-1.6.0-openjdk \
-  && cd ~/faban/benchmarks/OlioDriver/bin \
+  ssh root@$1 "cd ~/faban/benchmarks/OlioDriver/bin \
   && ./dbloader.sh localhost $2"
 
   # Create microsec function
