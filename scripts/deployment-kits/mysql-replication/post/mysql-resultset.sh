@@ -18,22 +18,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#Script to collect Faban data, as well as MySQL logs and more.
+#Script to collect MySQL logs.
 
-if [ "${#}" -lt "4" ]
+if [ "${#}" -lt "3" ]
 then
-  echo "This script takes addresses of Faban and MySQL instances and name "
+  echo "This script takes addresses of MySQL instances and name "
   echo "of task and archive path to download result sets."
   echo ""
   echo "Usage:"
-  echo "   ${0} [Faban] [MySQL] [Taks_Name] [Archive_Path]"
+  echo "   ${0} [MySQL] [Taks_Name] [Archive_Path]"
   exit 0;
 fi
 
-FABAN_INSTANCE="${1}"
-MYSQL_INSTANCE="${2}"
-TASK_NAME="${3}"
-ARCHIVE_PATH="${4}"
+MYSQL_INSTANCE="${1}"
+TASK_NAME="${2}"
+ARCHIVE_PATH="${2}"
 
 check_errs()
 {
@@ -59,10 +58,6 @@ download_logs()
 }
 
 # Download result set
-echo "Start downloading result set from Faban and MySQL"
-scp -r root@$FABAN_INSTANCE:~/faban/output/$TASK_NAME ~/$ARCHIVE_PATH/. > /dev/null
-check_errs $? "Download result set failed in $FABAN_INSTANCE."
-
 for mysql in $MYSQL_INSTANCE; do
   download_logs $mysql &
 done

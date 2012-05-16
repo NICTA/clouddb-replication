@@ -23,24 +23,22 @@
 #NOTE:
 #This script will replace config file in .ssh in remote machine
 #We need a private key for EC2 access in this folder.
-#Rename the key to dbadmin.pem.template, or change script to suit 
-#your need.
+#Rename the key to dbadmin.pem, or change script to suit your need.
 #
 #This script is for Ubuntu EC2 instances. For other Linux distributions,
 #please make corresponding changes.
 #
 
-if [ "${#}" -lt "2" ]; then
+if [ "${#}" -lt "1" ]; then
   echo "This script takes addresses of Ubuntu instances to install "
-  echo "softwares for the test environment."
+  echo "Faban and other softwares for the test environment."
   echo ""
   echo "Usage:"
-  echo "   ${0} [Faban] [MySQL]"
+  echo "   ${0} [Faban]"
   exit 0
 fi
 
 FABAN_INSTANCE="${1}"
-MYSQL_INSTANCE="${2}"
 
 # Acquire SSH policy
 # It is a pre-requirement of all following installation 
@@ -50,8 +48,8 @@ install_ssh_policy()
   ssh ubuntu@$1 "sudo cp /home/ubuntu/.ssh/authorized_keys /root/.ssh/"
 
   # Deploy ssh policy
-  scp -r config.ssh.template root@$1:~/.ssh/config
-  scp -r dbadmin.pem.template root@$1:~/.ssh/dbadmin.pem && \
+  scp -r ./conf/config-ssh root@$1:~/.ssh/config
+  scp -r ./conf/dbadmin.pem root@$1:~/.ssh/dbadmin.pem && \
   ssh root@$1 "chmod 600 ~/.ssh/dbadmin.pem"
 }
 
@@ -73,28 +71,6 @@ install_faban_sys()
   ssh root@$1 "tar -jxvf faban.tar.bz2 \
   && rm faban.tar.bz2"
   ssh root@$1 "mkdir ~/faban/config/profiles"
-}
-
-# Install MySQL databases
-# It is a pre-requirement of Olio platform in master database
-# It is also a pre-requirement of database monitoring tools
-install_mysql()
-{
-  # Create user and group
-  ssh root@$1 "groupadd mysql"
-  ssh root@$1 "useradd -r -g mysql mysql"
-
-  # Download and untar MySQL
-  ssh root@$1 "wget http://dev.mysql.com/get/Downloads/MySQL-5.1/mysql-5.1.56-linux-i686-glibc23.tar.gz/from/ftp://mirror.anl.gov/pub/mysql/ \
-  && tar -zxvf mysql-5.1.56-linux-i686-glibc23.tar.gz -C /usr/local/ \
-  && mv /usr/local/mysql-5.1.56-linux-i686-glibc23 /usr/local/mysql \
-  && rm mysql-5.1.56-linux-i686-glibc23.tar.gz"
-  ssh root@$1 "echo 'export PATH=\$PATH:/usr/local/mysql/bin' | cat - ~/.bashrc > ~/.bashrc_r \
-  && mv ~/.bashrc_r ~/.bashrc"
-  ssh root@$1 "cd /usr/local/mysql \
-  && chown -R mysql . \
-  && chgrp -R mysql ."
-  ssh root@$1 "cp /usr/local/mysql/support-files/mysql.server /etc/init.d/mysql.server"
 }
 
 # Install Olio platform
@@ -124,33 +100,6 @@ install_sys_tools()
   ssh root@$1 "aptitude -y install sysstat"
 }
 
-# Install extra tools for database monitoring
-install_db_tools()
-{
-  # Install microsec plugin
-  scp -r ../../packages/now_microsec.so root@$1:/usr/local/mysql/lib/plugin
-
-  # Install Network Time Protocol
-  ssh root@$1 "aptitude -y install ntp \
-  && service ntp stop"
-}
-
-setup_mysql_inst()
-{
-  # Install SSH policy, Java runtime environment, Faban system
-  install_ssh_policy $1
-  install_java_env $1
-  install_faban_sys $1
-
-  # Install MySQL database and Olio
-  install_mysql $1
-#  install_olio_sys $1
-
-  # Install misc tools
-  install_sys_tools $1
-  install_db_tools $1
-}
-
 setup_faban_inst()
 {
   # Install SSH policy, Java runtime environment, Faban system
@@ -162,14 +111,7 @@ setup_faban_inst()
   install_sys_tools $1
 }
 
-# Setup MySQL instance
-echo "Start installing MySQL instance (1/2)"
-for mysql in $MYSQL_INSTANCE; do
-  setup_mysql_inst $mysql > /dev/null &
-done
-
 # Setup Faban instance
-echo "Start installing Faban instance (2/2)"
 for agent in $FABAN_INSTANCE; do
   setup_faban_inst $agent > /dev/null &
 done

@@ -1,6 +1,3 @@
-deployment-kits/supports/*.pub
-deployment-kits/supports/*.pem
-deployment-kits/mysql-replication/install/dbadmin.pem.template
-deployment-kits/packages/OlioDriver.jar
-deployment-kits/packages/faban.tar.bz2
-deployment-kits/packages/olio.tar.bz2
+deployment-kits/supports/import-keypairs/*.pub
+deployment-kits/supports/import-keypairs/*.pem
+deployment-kits/mysql-replication/install/conf/*.pem
