@@ -21,9 +21,9 @@
 #Script to auto generate dump of MySQL database for various workloads, 
 #all dumps are compressed and archived.
 #
-#This script is used for EC2 instances, initially. Therefore, Olio and
-#Heartbeats tables are separated in two databases. And Heartbeats records
-#timestamps in microsecond granularity.
+#This script is used for RDS instances, initially. Therefore, Olio and
+#Heartbeats tables are separated in two databases. But Heartbeats records 
+#timestamps in second granularity, using the built-in function.
 
 if [ "${#}" -lt "1" ]; then
   echo "This script takes addresses of MySQL master database and number "
@@ -35,10 +35,10 @@ if [ "${#}" -lt "1" ]; then
 fi
 
 MASTER_INSTANCE="${1}"
-NUM_OF_USERS=( "50" "100" "150" "200" \
-              "250" "300" "350" "400" \
-              "450" "500" "550" "600" \
-			  "650" "700" "750" "800")
+NUM_OF_USERS=( "25" "50" "75" "100" \
+              "125" "150" "175" "200" \
+              "225" "250" "275" "300" \
+			  "325" "350" "375" "400")
 
 REPL_PASSWORD=password
 DIST_FOLDER=/root/mysql-data
@@ -63,7 +63,7 @@ install_olio_sys()
   scp -r ../../packages/olio.tar.bz2 root@$1:~/olio.tar.bz2 && \
   ssh root@$1 "mkdir /var/app" && \
   ssh root@$1 "tar -jxvf olio.tar.bz2 -C /var/app \
-  && rm olio.tar.bz2"
+  && rm ~/olio.tar.bz2"
 }
 
 # Initializing MySQL databases
@@ -103,10 +103,6 @@ initialize_database()
   ssh root@$1 "mysql -u root -e \
   \"CREATE DATABASE IF NOT EXISTS heartbeats;\"" && \
 
-  # Create microsec function
-  ssh root@$1 "mysql -u root -e \
-  \"CREATE FUNCTION now_microsec RETURNS STRING SONAME 'now_microsec.so';\""
-
   # Create database tables
   ssh root@$1 "cd /var/app/olio \
   && /var/lib/gems/1.8/bin/rake db:migrate"
@@ -132,15 +128,11 @@ generate_database()
 dump_database()
 {
   # Snapshot databases in master
-  master_mysql_log=`ssh root@$1 "mysql -u root -e \
-  \"FLUSH TABLES WITH READ LOCK; \
-  SHOW MASTER STATUS;\"" | grep mysql-bin`
-  ssh root@$1 "mysqladmin shutdown"
-  ssh root@$1 "tar jcf $DIST_FOLDER/mysql.tar.bz2 -C /usr/local/mysql/data/ ."
+  ssh root@$1 "mysql -u root -e \"FLUSH TABLES WITH READ LOCK; \""
+  ssh root@$1 "mysqldump -uolio -polio --databases olio heartbeats | gzip > $DIST_FOLDER/olio-$2.sql.gz"
 
   # Delete snapshot after copying to slaves
-  ssh root@$1 "mv $DIST_FOLDER/mysql.tar.bz2 $DIST_FOLDER/mysql-$2.tar.bz2"
-  ssh root@$1 "echo $master_mysql_log > $DIST_FOLDER/mysql-$2.tar.bz2.log"
+  ssh root@$1 "mysqladmin shutdown"
   ssh root@$1 "rm -rf /usr/local/mysql/data/*"
 }
 
