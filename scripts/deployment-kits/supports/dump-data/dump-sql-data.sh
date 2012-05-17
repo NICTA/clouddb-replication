@@ -146,3 +146,4 @@ for ((i=0; i < ${#NUM_OF_USERS[*]}; i++)) do
   generate_database $master_mysql ${NUM_OF_USERS[$i]} > /dev/null 2>&1
   dump_database $master_mysql ${NUM_OF_USERS[$i]} > /dev/null 2>&1
 done
+
