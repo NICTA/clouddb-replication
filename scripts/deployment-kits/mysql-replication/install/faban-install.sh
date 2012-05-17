@@ -73,26 +73,6 @@ install_faban_sys()
   ssh root@$1 "mkdir ~/faban/config/profiles"
 }
 
-# Install Olio platform
-install_olio_sys()
-{
-  # Setup MySQL library path for compiling
-  ssh root@$1 "echo '/usr/local/mysql/lib' >> /etc/ld.so.conf \
-  && ldconfig"
-  # Upload and untar Olio to master
-  ssh root@$1 "aptitude -y install build-essential ruby ruby-dev \
-  rubygems libopenssl-ruby libfreeimage-dev \
-  && gem install rake -V --no-ri --no-rdoc -v=0.8.7 \
-  && gem install rails -V --no-ri --no-rdoc -v=2.3.8 \
-  && gem install mysql -V --no-ri --no-rdoc -v=2.7 -- --with-mysql-dir=/usr/local/mysql \
-  && gem install rcov -V --no-ri --no-rdoc -v=0.9.11 \
-  && gem install will_paginate -V --no-ri --no-rdoc -v=2.3.16"
-  scp -r ../../packages/olio.tar.bz2 root@$1:~/olio.tar.bz2 && \
-  ssh root@$1 "mkdir /var/app" && \
-  ssh root@$1 "tar -jxvf olio.tar.bz2 -C /var/app \
-  && rm olio.tar.bz2"
-}
-
 # Install extra tools for system monitoring
 install_sys_tools()
 {

@@ -40,14 +40,34 @@ REPL_PASSWORD=password
 DIST_FOLDER=/root/mysql-data
 DISK_DISK=/dev/sdf5
 
-# Initializing MySQL databases
 master_mysql=$MASTER_INSTANCE
 
-generate_database_dump()
+# Install Olio platform
+install_olio_sys()
+{
+  # Setup MySQL library path for compiling
+  ssh root@$1 "echo '/usr/local/mysql/lib' >> /etc/ld.so.conf \
+  && ldconfig"
+  # Upload and untar Olio to master
+  ssh root@$1 "aptitude -y install build-essential ruby ruby-dev \
+  rubygems libopenssl-ruby libfreeimage-dev \
+  && gem install rake -V --no-ri --no-rdoc -v=0.8.7 \
+  && gem install rails -V --no-ri --no-rdoc -v=2.3.8 \
+  && gem install mysql -V --no-ri --no-rdoc -v=2.7 -- --with-mysql-dir=/usr/local/mysql \
+  && gem install rcov -V --no-ri --no-rdoc -v=0.9.11 \
+  && gem install will_paginate -V --no-ri --no-rdoc -v=2.3.16"
+  scp -r ../../packages/olio.tar.bz2 root@$1:~/olio.tar.bz2 && \
+  ssh root@$1 "mkdir /var/app" && \
+  ssh root@$1 "tar -jxvf olio.tar.bz2 -C /var/app \
+  && rm olio.tar.bz2"
+}
+
+# Initializing MySQL databases
+initialize_database()
 {
   num_mysql=1
   # Copying my.cnf
-  cp my.cnf.template my_$num_mysql.cnf
+  cp my.cnf my_$num_mysql.cnf
   perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my_$num_mysql.cnf
   scp -r my_$num_mysql.cnf root@$master_mysql:/etc/my.cnf
   rm my_$num_mysql.cnf
@@ -73,13 +93,25 @@ generate_database_dump()
   \"GRANT ALL PRIVILEGES ON *.* TO 'olio'@'%' IDENTIFIED BY 'olio';\" \
   && mysql -u root -e \"FLUSH PRIVILEGES;\""
 
-  # Create Olio database
+  # Create Olio and Heartbeats database schema
   ssh root@$1 "mysql -u root -e \
   \"CREATE DATABASE IF NOT EXISTS olio;\"" && \
   ssh root@$1 "mysql -u root -e \
   \"CREATE DATABASE IF NOT EXISTS heartbeats;\"" && \
+
+  # Create microsec function
+  ssh root@$1 "mysql -u root -e \
+  \"CREATE FUNCTION now_microsec RETURNS STRING SONAME 'now_microsec.so';\""
+
+  # Create database tables
   ssh root@$1 "cd /var/app/olio \
   && /var/lib/gems/1.8/bin/rake db:migrate"
+  ssh root@$1 "mysql -uolio -polio -e \
+  \"CREATE TABLE IF NOT EXISTS heartbeats.heartbeats(sys_mill CHAR(26), db_micro CHAR(26)) ENGINE = MEMORY;\""
+}
+
+generate_database()
+{
   # Generate Olio data
   ssh root@$1 "mkdir ~/faban/benchmarks/OlioDriver"
   scp -r ../../packages/OlioDriver.jar root@$1:~/faban/benchmarks/OlioDriver/OlioDriver.jar
@@ -89,16 +121,12 @@ generate_database_dump()
   ssh root@$1 "cd ~/faban/benchmarks/OlioDriver/bin \
   && ./dbloader.sh localhost $2"
 
-  # Create microsec function
-  ssh root@$1 "mysql -u root -e \
-  \"CREATE FUNCTION now_microsec RETURNS STRING SONAME 'now_microsec.so';\""
-  # Implement heartbeats table
-  ssh root@$1 "mysql -uolio -polio -e \
-  \"CREATE TABLE IF NOT EXISTS heartbeats.heartbeats(sys_mill CHAR(26), db_micro CHAR(26)) ENGINE = MEMORY;\""
-
   # Flush all logs
   ssh root@$1 "mysqladmin flush-logs"
+}
 
+dump_database()
+{
   # Snapshot databases in master
   master_mysql_log=`ssh root@$1 "mysql -u root -e \
   \"FLUSH TABLES WITH READ LOCK; \
@@ -109,13 +137,16 @@ generate_database_dump()
   # Delete snapshot after copying to slaves
   ssh root@$1 "mv $DIST_FOLDER/mysql.tar.bz2 $DIST_FOLDER/mysql-$2.tar.bz2"
   ssh root@$1 "echo $master_mysql_log > $DIST_FOLDER/mysql-$2.tar.bz2.log"
+  ssh root@$1 "rm -rf /usr/local/mysql/data/*"
 }
 
 ssh root@$1 "mount $DISK_DISK $DIST_FOLDER/"
 ssh root@$1 "rm $DIST_FOLDER/mysql-*"
+install_olio_sys $master_mysql
 # Deploy MySQL instance
 for ((i=0; i < ${#NUM_OF_USERS[*]}; i++)) do
   echo "($[i+1]/${#NUM_OF_USERS[*]}) Start deploying MySQL instance for ${NUM_OF_USERS[$i]} users on `date` ..."
-  generate_database_dump $master_mysql ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+  initialize_database $master_mysql > /dev/null 2>&1
+  generate_database $master_mysql ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+  dump_database $master_mysql ${NUM_OF_USERS[$i]} > /dev/null 2>&1
 done
-ssh root@$1 "rm -rf /usr/local/mysql/data/*"
