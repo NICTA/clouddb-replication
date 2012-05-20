@@ -99,7 +99,6 @@ deploy_master_database()
 }
 
 # Deploy MySQL instance
-echo "Start deploying MySQL instance (2/2)"
 num_mysql=0
 for mysql in $MYSQL_INSTANCE_RUN; do
   num_mysql=$[$num_mysql+1]

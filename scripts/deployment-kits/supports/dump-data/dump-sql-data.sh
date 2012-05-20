@@ -78,7 +78,7 @@ initialize_database()
   cp my-sql.cnf my-sql_$num_mysql.cnf
   perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql.cnf
   scp -r my-sql_$num_mysql.cnf root@$master_mysql:/etc/my.cnf
-  rm -f my-sql_$num_mysql.cnf
+  rm -f ~/my-sql_$num_mysql.cnf
   
   # Kill all mysqld
   ssh root@$1 "killall -w mysqld"
@@ -106,6 +106,8 @@ initialize_database()
   \"CREATE DATABASE IF NOT EXISTS olio;\"" && \
   ssh root@$1 "mysql -u root -e \
   \"CREATE DATABASE IF NOT EXISTS heartbeats;\""
+  ssh root@$1 "mysql -uolio -polio -e \
+  \"CREATE TABLE IF NOT EXISTS heartbeats.heartbeats(sys_mill CHAR(26), db_micro CHAR(26)) ENGINE = MEMORY;\""
 }
 
 generate_database()
@@ -113,8 +115,6 @@ generate_database()
   # Create database tables
   ssh root@$1 "cd /var/app/olio \
   && /var/lib/gems/1.8/bin/rake db:migrate"
-  ssh root@$1 "mysql -uolio -polio -e \
-  \"CREATE TABLE IF NOT EXISTS heartbeats.heartbeats(sys_mill CHAR(26), db_micro CHAR(26)) ENGINE = MEMORY;\""
 
   # Generate Olio data
   ssh root@$1 "mkdir ~/faban/benchmarks/OlioDriver"

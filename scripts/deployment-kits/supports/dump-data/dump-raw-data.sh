@@ -67,7 +67,7 @@ install_olio_sys()
   scp -r ../../packages/olio.tar.bz2 root@$1:~/olio.tar.bz2 && \
   ssh root@$1 "mkdir /var/app" && \
   ssh root@$1 "tar -jxvf olio.tar.bz2 -C /var/app \
-  && rm -f olio.tar.bz2"
+  && rm -f ~/olio.tar.bz2"
 }
 
 # Initializing MySQL databases
@@ -106,6 +106,8 @@ initialize_database()
   \"CREATE DATABASE IF NOT EXISTS olio;\"" && \
   ssh root@$1 "mysql -u root -e \
   \"CREATE DATABASE IF NOT EXISTS heartbeats;\"" && \
+  ssh root@$1 "mysql -uolio -polio -e \
+  \"CREATE TABLE IF NOT EXISTS heartbeats.heartbeats(sys_mill CHAR(26), db_micro CHAR(26)) ENGINE = MEMORY;\""
 
   # Create microsec function
   ssh root@$1 "mysql -u root -e \
@@ -117,8 +119,6 @@ generate_database()
   # Create database tables
   ssh root@$1 "cd /var/app/olio \
   && /var/lib/gems/1.8/bin/rake db:migrate"
-  ssh root@$1 "mysql -uolio -polio -e \
-  \"CREATE TABLE IF NOT EXISTS heartbeats.heartbeats(sys_mill CHAR(26), db_micro CHAR(26)) ENGINE = MEMORY;\""
 
   # Generate Olio data
   ssh root@$1 "mkdir ~/faban/benchmarks/OlioDriver"
