@@ -100,7 +100,7 @@ cd "$LOCATION/install" && ./mysql-install.sh "$mysql_instance_all" > /dev/null 2
 cd "$LOCATION/update" && ./mysql-update.sh "$mysql_instance_all" > /dev/null 2>&1
 check_errs $? "Install instances failed."
 
-for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>1; k=$[$k-$STEP])) do
+for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
 	mysql_instance_run=${MYSQL_INSTANCE_RUN[0]}
 	for ((m=1; m < k; m++)) do
 		mysql_instance_run=$mysql_instance_run" "${MYSQL_INSTANCE_RUN[$m]}
