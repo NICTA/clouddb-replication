@@ -104,10 +104,10 @@ num_mysql=0
 for mysql in $MYSQL_INSTANCE_RUN; do
   num_mysql=$[$num_mysql+1]
   # Copying my.cnf
-  cp ./mysql-conf/my.cnf my_$num_mysql.cnf
-  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my_$num_mysql.cnf
-  scp -r my_$num_mysql.cnf root@$mysql:/etc/my.cnf
-  rm my_$num_mysql.cnf
+  cp ./mysql-conf/my-raw.cnf my-raw_$num_mysql.cnf
+  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-raw_$num_mysql.cnf
+  scp -r my-raw_$num_mysql.cnf root@$mysql:/etc/my.cnf
+  rm my-raw_$num_mysql.cnf
 
   if [ "$NUM_OF_USER" -eq "1" ]; then
     num_scale=50
@@ -127,10 +127,10 @@ done
 for mysql in $MYSQL_INSTANCE_PAUSE; do
   num_mysql=$[$num_mysql+1]
   # Copying my.cnf
-  cp ./mysql-conf/my.cnf my_$num_mysql.cnf
-  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my_$num_mysql.cnf
-  scp -r my_$num_mysql.cnf root@$mysql:/etc/my.cnf
-  rm my_$num_mysql.cnf
+  cp ./mysql-conf/my-raw.cnf my-raw_$num_mysql.cnf
+  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-raw_$num_mysql.cnf
+  scp -r my-raw_$num_mysql.cnf root@$mysql:/etc/my.cnf
+  rm my-raw_$num_mysql.cnf
 
   if [ "$NUM_OF_USER" -eq "1" ]; then
     num_scale=50

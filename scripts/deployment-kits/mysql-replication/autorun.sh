@@ -49,7 +49,8 @@
 #       http://www.opensparc.net/sunsource/faban/www/1.0/docs/howdoi/loadvariation.html
 #   iv. Match replication heartbeat with heartbeat interval in CloudDB 
 #       Autoadmin configure.
-#   
+# 6. To use SQL data deploy, you need to specify MYSQL_DATA_SOURCE in 
+#    *-sql-data-deploy.sh  
 
 LOCATION=`pwd`
 
@@ -113,7 +114,8 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>1; k=$[$k-$STEP])) do
         echo "Start deploying Faban instance (1/2)"
 		cd "$LOCATION/deploy" && ./faban-deploy.sh "$faban_instance_all" "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} > /dev/null 2>&1
         echo "Start deploying MySQL instance (2/2)"
-		cd "$LOCATION/deploy" && ./mysql-deploy.sh "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+		cd "$LOCATION/deploy" && ./mysql-raw-data-deploy.sh "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+		#cd "$LOCATION/deploy" && ./mysql-sql-data-deploy.sh "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} > /dev/null 2>&1
 		check_errs $? "Deploy instances failed."
 		
 		# Start test from command line

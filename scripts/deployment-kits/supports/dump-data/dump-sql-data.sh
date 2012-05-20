@@ -26,8 +26,8 @@
 #timestamps in second granularity, using the built-in function.
 
 if [ "${#}" -lt "1" ]; then
-  echo "This script takes addresses of MySQL master database and number "
-  echo "of concurrent users to generate necessary data dumps."
+  echo "This script takes addresses of MySQL master database to generate " 
+  echo "empty and other necessary data dumps."
   echo ""
   echo "Usage:"
   echo "   ${0} [MySQL]"
@@ -35,7 +35,11 @@ if [ "${#}" -lt "1" ]; then
 fi
 
 MASTER_INSTANCE="${1}"
-NUM_OF_USERS=( "25" "50" "75" "100" \
+# Use '0' to generate an empty raw dump. The empty raw dump can be used
+# to create slaves and import SQL dumps.
+# Use other numbers to generate SQL dumps
+NUM_OF_USERS=(  "0" \
+               "25" "50" "75" "100" \
               "125" "150" "175" "200" \
               "225" "250" "275" "300" \
 			  "325" "350" "375" "400")
@@ -63,7 +67,7 @@ install_olio_sys()
   scp -r ../../packages/olio.tar.bz2 root@$1:~/olio.tar.bz2 && \
   ssh root@$1 "mkdir /var/app" && \
   ssh root@$1 "tar -jxvf olio.tar.bz2 -C /var/app \
-  && rm ~/olio.tar.bz2"
+  && rm -f ~/olio.tar.bz2"
 }
 
 # Initializing MySQL databases
@@ -71,10 +75,10 @@ initialize_database()
 {
   num_mysql=1
   # Copying my.cnf
-  cp my.cnf my_$num_mysql.cnf
-  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my_$num_mysql.cnf
-  scp -r my_$num_mysql.cnf root@$master_mysql:/etc/my.cnf
-  rm my_$num_mysql.cnf
+  cp my-sql.cnf my-sql_$num_mysql.cnf
+  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql.cnf
+  scp -r my-sql_$num_mysql.cnf root@$master_mysql:/etc/my.cnf
+  rm -f my-sql_$num_mysql.cnf
   
   # Kill all mysqld
   ssh root@$1 "killall -w mysqld"
@@ -101,17 +105,17 @@ initialize_database()
   ssh root@$1 "mysql -u root -e \
   \"CREATE DATABASE IF NOT EXISTS olio;\"" && \
   ssh root@$1 "mysql -u root -e \
-  \"CREATE DATABASE IF NOT EXISTS heartbeats;\"" && \
+  \"CREATE DATABASE IF NOT EXISTS heartbeats;\""
+}
 
+generate_database()
+{
   # Create database tables
   ssh root@$1 "cd /var/app/olio \
   && /var/lib/gems/1.8/bin/rake db:migrate"
   ssh root@$1 "mysql -uolio -polio -e \
   \"CREATE TABLE IF NOT EXISTS heartbeats.heartbeats(sys_mill CHAR(26), db_micro CHAR(26)) ENGINE = MEMORY;\""
-}
 
-generate_database()
-{
   # Generate Olio data
   ssh root@$1 "mkdir ~/faban/benchmarks/OlioDriver"
   scp -r ../../packages/OlioDriver.jar root@$1:~/faban/benchmarks/OlioDriver/OlioDriver.jar
@@ -120,13 +124,13 @@ generate_database()
   && chmod +x ~/faban/benchmarks/OlioDriver/bin/*.*"
   ssh root@$1 "cd ~/faban/benchmarks/OlioDriver/bin \
   && ./dbloader.sh localhost $2"
-
-  # Flush all logs
-  ssh root@$1 "mysqladmin flush-logs"
 }
 
 dump_database()
 {
+  # Flush all logs
+  ssh root@$1 "mysqladmin flush-logs"
+
   # Snapshot databases in master
   ssh root@$1 "mysql -u root -e \"FLUSH TABLES WITH READ LOCK; \""
   ssh root@$1 "mysqldump -uolio -polio --databases olio heartbeats | gzip > $DIST_FOLDER/olio-$2.sql.gz"
@@ -136,14 +140,39 @@ dump_database()
   ssh root@$1 "rm -rf /usr/local/mysql/data/*"
 }
 
+dump_empty_database()
+{
+  # Flush all logs
+  ssh root@$1 "mysqladmin flush-logs"
+
+  # Snapshot databases in master
+  master_mysql_log=`ssh root@$1 "mysql -u root -e \
+  \"FLUSH TABLES WITH READ LOCK; \
+  SHOW MASTER STATUS;\"" | grep mysql-bin`
+  ssh root@$1 "mysqladmin shutdown"
+  ssh root@$1 "tar jcf $DIST_FOLDER/mysql.tar.bz2 -C /usr/local/mysql/data/ ."
+
+  # Delete snapshot after copying to slaves
+  ssh root@$1 "mv $DIST_FOLDER/mysql.tar.bz2 $DIST_FOLDER/mysql-$2.tar.bz2"
+  ssh root@$1 "echo $master_mysql_log > $DIST_FOLDER/mysql-$2.tar.bz2.log"
+  ssh root@$1 "rm -rf /usr/local/mysql/data/*"
+}
+
 ssh root@$1 "mount $DISK_DISK $DIST_FOLDER/"
-ssh root@$1 "rm $DIST_FOLDER/mysql-*"
+ssh root@$1 "rm -f $DIST_FOLDER/mysql-*"
 install_olio_sys $master_mysql
 # Deploy MySQL instance
 for ((i=0; i < ${#NUM_OF_USERS[*]}; i++)) do
   echo "($[i+1]/${#NUM_OF_USERS[*]}) Start deploying MySQL instance for ${NUM_OF_USERS[$i]} users on `date` ..."
   initialize_database $master_mysql > /dev/null 2>&1
-  generate_database $master_mysql ${NUM_OF_USERS[$i]} > /dev/null 2>&1
-  dump_database $master_mysql ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+  if [ "${NUM_OF_USERS[$i]}" -eq "0" ]; then
+	# Don't generate any data if the user is set to 0, just dump whole 
+	# as a raw archive
+    dump_empty_database $master_mysql ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+  else 
+	generate_database $master_mysql ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+	# Dump all as a SQL file
+    dump_database $master_mysql ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+  fi
 done
 
