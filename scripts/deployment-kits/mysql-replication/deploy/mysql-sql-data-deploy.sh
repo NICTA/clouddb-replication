@@ -31,8 +31,7 @@ fi
 
 MYSQL_INSTANCE_RUN="${1}"
 MYSQL_INSTANCE_PAUSE="${2}"
-#MYSQL_DATA_SOURCE="SOURCE.us-west-1.compute.amazonaws.com"
-MYSQL_DATA_SOURCE="ec2-50-18-150-239.us-west-1.compute.amazonaws.com"
+MYSQL_DATA_SOURCE="SOURCE.us-west-1.compute.amazonaws.com"
 NUM_OF_USER=${3}
 NUM_OF_SCALE=${3}
 MYSQL_CONF=my-sql.cnf/rds-like.cnf.m1.small
