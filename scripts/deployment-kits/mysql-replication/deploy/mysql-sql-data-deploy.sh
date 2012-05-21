@@ -31,8 +31,11 @@ fi
 
 MYSQL_INSTANCE_RUN="${1}"
 MYSQL_INSTANCE_PAUSE="${2}"
+#MYSQL_DATA_SOURCE="SOURCE.us-west-1.compute.amazonaws.com"
+MYSQL_DATA_SOURCE="ec2-50-18-150-239.us-west-1.compute.amazonaws.com"
 NUM_OF_USER=${3}
 NUM_OF_SCALE=${3}
+MYSQL_CONF=my-sql.cnf/rds-like.cnf.m1.small
 
 REPL_PASSWORD=password
 DIST_FOLDER=/root/mysql-data
@@ -40,7 +43,7 @@ DIST_FOLDER=/root/mysql-data
 deploy_database()
 {
   # Copy a snapshot to slave
-  ssh root@$1 "cp $DIST_FOLDER/mysql-$2.tar.bz2 /var/tmp/mysql.tar.bz2"
+  ssh root@$1 "cp $DIST_FOLDER/mysql-0.tar.bz2 /var/tmp/mysql.tar.bz2"
   ssh root@$1 "killall -w mysqld"
 
   # Restore databases
@@ -51,10 +54,10 @@ deploy_database()
 
 deploy_running_slave_database()
 {
-  deploy_database $1 $3
+  deploy_database $1
 
   # Stop slave and prepare logs
-  master_mysql_log=`ssh root@$1 "cat $DIST_FOLDER/mysql-$3.tar.bz2.log"`
+  master_mysql_log=`ssh root@$1 "cat $DIST_FOLDER/mysql-0.tar.bz2.log"`
   master_mysql_log_file_name=`echo $master_mysql_log | awk '{print $1;}' | awk -F. '{print $1;}'`
   # Not really sure the reason, but each start of MySQL incrases log file number by 1
   # As we have to start MySQL master from scratch, thus we need to +1 based on the original logs
@@ -81,13 +84,13 @@ deploy_running_slave_database()
 
 deploy_paused_slave_database()
 {
-  deploy_running_slave_database $1 $2 $3
+  deploy_running_slave_database $1 $2
   ssh root@$1 "killall -w mysqld"
 }
 
 deploy_master_database()
 {
-  deploy_database $1 $2
+  deploy_database $1
 
   ssh root@$1 "/etc/init.d/mysql.server start"
   ssh root@$1 "mysql -u root -e \"UNLOCK TABLES;\""
@@ -96,6 +99,9 @@ deploy_master_database()
 
   # Error log link
   ssh root@$1 "ln -s /usr/local/mysql/data/\`hostname\`.err /usr/local/mysql/data/$mysql.err"
+  # Import SQL dump from source to the master
+  ssh root@$1 "scp root@$MYSQL_DATA_SOURCE:$DIST_FOLDER/olio-$2.sql.gz /var/tmp/olio.sql.gz"
+  ssh root@$1 "gunzip < /var/tmp/olio.sql.gz | mysql -u root"
 }
 
 # Deploy MySQL instance
@@ -103,10 +109,8 @@ num_mysql=0
 for mysql in $MYSQL_INSTANCE_RUN; do
   num_mysql=$[$num_mysql+1]
   # Copying my.cnf
-  cp ./mysql-conf/my-raw.cnf my-raw_$num_mysql.cnf
-  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-raw_$num_mysql.cnf
-  scp -r my-raw_$num_mysql.cnf root@$mysql:/etc/my.cnf
-  rm my-raw_$num_mysql.cnf
+  cp ./mysql-conf/$MYSQL_CONF my-sql_$num_mysql
+  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql
 
   if [ "$NUM_OF_USER" -eq "1" ]; then
     num_scale=50
@@ -117,25 +121,33 @@ for mysql in $MYSQL_INSTANCE_RUN; do
   if [ "$num_mysql" -eq "1" ]; then
     # Initializing MySQL databases
     master_mysql=$mysql
+    perl -p -i -e "s/#log_bin/log_bin/" my-sql_$num_mysql
+    perl -p -i -e "s/#binlog-format/binlog-format/" my-sql_$num_mysql
+    scp -r my-sql_$num_mysql root@$mysql:/etc/my.cnf
+    rm my-sql_$num_mysql
     deploy_master_database $master_mysql $num_scale &
   else
-    deploy_running_slave_database $mysql $master_mysql $num_scale &
+    scp -r my-sql_$num_mysql root@$mysql:/etc/my.cnf
+    rm my-sql_$num_mysql
+    deploy_running_slave_database $mysql $master_mysql &
   fi
 done
 
 for mysql in $MYSQL_INSTANCE_PAUSE; do
   num_mysql=$[$num_mysql+1]
   # Copying my.cnf
-  cp ./mysql-conf/my-raw.cnf my-raw_$num_mysql.cnf
-  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-raw_$num_mysql.cnf
-  scp -r my-raw_$num_mysql.cnf root@$mysql:/etc/my.cnf
-  rm my-raw_$num_mysql.cnf
+  cp ./mysql-conf/$MYSQL_CONF my-sql_$num_mysql
+  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql
+  scp -r my-sql_$num_mysql root@$mysql:/etc/my.cnf
+  rm my-sql_$num_mysql
 
   if [ "$NUM_OF_USER" -eq "1" ]; then
     num_scale=50
   else
     num_scale=$NUM_OF_SCALE
   fi
-  deploy_paused_slave_database $mysql $master_mysql $num_scale &
+  deploy_paused_slave_database $mysql $master_mysql &
 done
 wait
+# Sleep $NUM_OF_SCALE seconds so that data can be synced
+sleep $NUM_OF_SCALE

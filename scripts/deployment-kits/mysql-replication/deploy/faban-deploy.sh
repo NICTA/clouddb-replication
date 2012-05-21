@@ -35,6 +35,18 @@ MYSQL_INSTANCE_RUN="${2}"
 MYSQL_INSTANCE_PAUSE="${3}"
 NUM_OF_USER=${4}
 NUM_OF_SCALE=${4}
+NUM_OF_POOL_SIZE=${4}
+
+# The WRITE_INTERVAL defines the frequency of updating the heartbeats table 
+# in milliseconds unit
+WRITE_INTERVAL=1000
+# The READ_INTERVAL was designed as a frequency of reading the heartbeats table 
+# results in milliseconds unit, but since we always read the table at the end 
+# of experiment, this variable is abandoned and replaced by defining the choices 
+# of MySQL time/date function. If READ_INTERVAL is a positive value, we use a 
+# customized microsecond-resolution time/date function. If it is negative, then
+# we use the built-in second-resolution time/date function.
+READ_INTERVAL=1000
 
 # Define the proxy and address if database is connected via load balancer, you must start
 # a proxy (e.g. MySQL Proxy) before specifying this variable.
@@ -83,6 +95,9 @@ deploy_master_faban()
   perl -p -i -e "s/#FABAN_HOST#/$agent_serv_list/" run.xml.OlioDriver && \
   perl -p -i -e "s/#NUM_OF_USER#/$NUM_OF_USER/" run.xml.OlioDriver && \
   perl -p -i -e "s/#NUM_OF_SCALE#/$NUM_OF_SCALE/" run.xml.OlioDriver && \
+  perl -p -i -e "s/#NUM_OF_POOL_SIZE#/$NUM_OF_POOL_SIZE/" run.xml.OlioDriver && \
+  perl -p -i -e "s/#WRITE_INTERVAL#/$WRITE_INTERVAL/" run.xml.OlioDriver && \
+  perl -p -i -e "s/#READ_INTERVAL#/$READ_INTERVAL/" run.xml.OlioDriver && \
   perl -p -i -e "s/#DATABASE_HOST#/$db_host_list/" run.xml.OlioDriver && \
   perl -p -i -e "s/#NUM_OF_AGENT#/$num_agent/" run.xml.OlioDriver && \
   ###

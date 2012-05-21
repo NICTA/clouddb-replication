@@ -143,13 +143,8 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
 		cd "$LOCATION/post" && ./faban-resultset.sh "${FABAN_INSTANCE[0]}" $task_name $ARCHIVE_PATH > /dev/null 2>&1
         echo "Start downloading result set from MySQL (2/2)"
 		cd "$LOCATION/post" && ./mysql-resultset.sh "$mysql_instance_run" $task_name $ARCHIVE_PATH > /dev/null 2>&1
-		archive="OlioDriver_${mysql_instance_s}Database_${NUM_OF_USERS[$i]}User"
-		idx=1
-		# Rename file if it existed, not working at the moment
-		while [ -d ~/$ARCHIVE_PATH/$archive.7z ]; do
-			archive="OlioDriver_${mysql_instance_s}Database_${NUM_OF_USERS[$i]}User_$idx"
-			idx=$[$idx+1]
-		done
+		time=`date +"%s"`
+		archive="OlioDriver_${mysql_instance_s}Database_${NUM_OF_USERS[$i]}User_${time}"
 		mv ~/$ARCHIVE_PATH/$task_name ~/$ARCHIVE_PATH/$archive
 		7za a -t7z ~/$ARCHIVE_PATH/$archive.7z ~/$ARCHIVE_PATH/$archive
 		rm -fr ~/$ARCHIVE_PATH/$archive
