@@ -88,6 +88,7 @@
         <connectURL>jdbc:mysql://dbHost/olio?user=olio&amp;password=olio&amp;relaxAutoCommit=true&amp;sessionVariables=FOREIGN_KEY_CHECKS=0</connectURL>
         <reloadDB>true</reloadDB>
         <scale>50</scale>
+        <poolSize>100</poolSize>
         <fh:service xmlns:fh="http://faban.sunsource.net/ns/fabanharness">
             <fh:name>MySQLService</fh:name>
             <fh:tools>Mysqlstats; Mysqlheartbeat</fh:tools>
@@ -97,6 +98,10 @@
                 <user>olio</user>
                 <password>olio</password>
                 <confPath>/etc/my.cnf</confPath>
+                <!-- set interval-read to a negative value 
+                 *   if stick to MySQL's built-in time/date
+                 *   function
+                -->
                 <interval-read>100</interval-read>
                 <interval-write>500</interval-write>
              </fh:config>

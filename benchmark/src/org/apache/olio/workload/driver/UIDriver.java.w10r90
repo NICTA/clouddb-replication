@@ -46,7 +46,7 @@ import java.util.*;
 import javax.xml.xpath.XPathExpressionException;
 
 @BenchmarkDefinition(name = "OlioDatabase",
-version = "0.3.9",
+version = "0.4.0",
 scaleName = "Concurrent Users")
 @BenchmarkDriver(name = "UIDriver",
 threadPerScale = 1)
@@ -102,9 +102,11 @@ public class UIDriver {
                     + "users. Run terminating!");
         }
 
+        int pooleSize = Integer.parseInt(
+                ctx.getXPathValue("/olio/dbServer/poolSize"));
         DBConnectionFactory.setDbDriver(dbDriver);
         DBConnectionFactory.setConnectionURL(connectionURL);
-        DBConnectionFactory.setMaxActive(-1);
+        DBConnectionFactory.setMaxActive(pooleSize);
 
         isLoggedOn = false;
     }
