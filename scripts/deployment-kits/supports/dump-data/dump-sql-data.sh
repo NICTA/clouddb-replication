@@ -78,7 +78,7 @@ initialize_database()
   cp my-sql.cnf my-sql_$num_mysql.cnf
   perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql.cnf
   scp -r my-sql_$num_mysql.cnf root@$master_mysql:/etc/my.cnf
-  rm -f ~/my-sql_$num_mysql.cnf
+  rm -f my-sql_$num_mysql.cnf
   
   # Kill all mysqld
   ssh root@$1 "killall -w mysqld"
