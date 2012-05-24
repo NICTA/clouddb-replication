@@ -37,7 +37,7 @@ public class DBConnectionFactory {
             Logger.getLogger(DBConnectionFactory.class.getName());
     private static String connectionURL = null;
     private static String dbDriver = null;
-    private static final Integer MAX_IDLE = 0;
+    private static final Integer MAX_IDLE = -1;
     private static Integer maxActive = -1;
 
     public static void ensureConnection() throws SQLException {
