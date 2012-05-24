@@ -35,7 +35,7 @@ MYSQL_INSTANCE_RUN="${2}"
 MYSQL_INSTANCE_PAUSE="${3}"
 NUM_OF_USER=${4}
 NUM_OF_SCALE=${4}
-NUM_OF_POOL_SIZE=${4}
+NUM_OF_POOL_SIZE=-1
 
 # The WRITE_INTERVAL defines the frequency of updating the heartbeats table 
 # in milliseconds unit

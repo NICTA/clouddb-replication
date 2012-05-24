@@ -82,7 +82,7 @@
             <userCommands/>
         </fa:hostConfig>
         <dbDriver>#JDBC_DRIVER#</dbDriver>
-        <connectURL>#JDBC_CONNECTOR#//#DATABASE_SERVER#/olio?user=olio&amp;password=olio&amp;relaxAutoCommit=true&amp;sessionVariables=FOREIGN_KEY_CHECKS=0</connectURL>
+        <connectURL>#JDBC_CONNECTOR#//#DATABASE_SERVER#/olio?user=olio&amp;password=olio&amp;roundRobinLoadBalance=true&amp;relaxAutoCommit=true&amp;sessionVariables=FOREIGN_KEY_CHECKS=0</connectURL>
         <reloadDB>false</reloadDB>
         <scale>#NUM_OF_SCALE#</scale>
         <poolSize>#NUM_OF_POOL_SIZE#</poolSize>

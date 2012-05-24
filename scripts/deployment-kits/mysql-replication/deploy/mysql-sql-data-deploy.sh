@@ -34,6 +34,7 @@ MYSQL_INSTANCE_PAUSE="${2}"
 MYSQL_DATA_SOURCE="SOURCE.us-west-1.compute.amazonaws.com"
 NUM_OF_USER=${3}
 NUM_OF_SCALE=${3}
+MYSQL_M_CONF=my-sql.cnf/rds-like.cnf.m1.large
 MYSQL_CONF=my-sql.cnf/rds-like.cnf.m1.small
 
 REPL_PASSWORD=password
@@ -107,9 +108,6 @@ deploy_master_database()
 num_mysql=0
 for mysql in $MYSQL_INSTANCE_RUN; do
   num_mysql=$[$num_mysql+1]
-  # Copying my.cnf
-  cp ./mysql-conf/$MYSQL_CONF my-sql_$num_mysql
-  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql
 
   if [ "$NUM_OF_USER" -eq "1" ]; then
     num_scale=50
@@ -120,12 +118,18 @@ for mysql in $MYSQL_INSTANCE_RUN; do
   if [ "$num_mysql" -eq "1" ]; then
     # Initializing MySQL databases
     master_mysql=$mysql
+    # Copying my.cnf
+    cp ./mysql-conf/$MYSQL_M_CONF my-sql_$num_mysql
+    perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql
     perl -p -i -e "s/#log_bin/log_bin/" my-sql_$num_mysql
     perl -p -i -e "s/#binlog-format/binlog-format/" my-sql_$num_mysql
     scp -r my-sql_$num_mysql root@$mysql:/etc/my.cnf
     rm my-sql_$num_mysql
     deploy_master_database $master_mysql $num_scale &
   else
+    # Copying my.cnf
+    cp ./mysql-conf/$MYSQL_CONF my-sql_$num_mysql
+    perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql
     scp -r my-sql_$num_mysql root@$mysql:/etc/my.cnf
     rm my-sql_$num_mysql
     deploy_running_slave_database $mysql $master_mysql &
@@ -149,4 +153,4 @@ for mysql in $MYSQL_INSTANCE_PAUSE; do
 done
 wait
 # Sleep $NUM_OF_SCALE seconds so that data can be synced
-sleep $NUM_OF_SCALE
+sleep $(( $NUM_OF_SCALE / 2 ))
