@@ -88,7 +88,7 @@
         <connectURL>jdbc:mysql://dbHost/olio?user=olio&amp;password=olio&amp;relaxAutoCommit=true&amp;sessionVariables=FOREIGN_KEY_CHECKS=0</connectURL>
         <reloadDB>true</reloadDB>
         <scale>50</scale>
-        <poolSize>100</poolSize>
+        <poolSize>-1</poolSize>
         <fh:service xmlns:fh="http://faban.sunsource.net/ns/fabanharness">
             <fh:name>MySQLService</fh:name>
             <fh:tools>Mysqlstats; Mysqlheartbeat</fh:tools>

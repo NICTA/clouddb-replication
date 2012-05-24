@@ -9,5 +9,5 @@
 ├── fabancommon.jar
 ├── fabandriver.jar
 ├── java_memcached-release_2.0.1.jar
-└── mysql-connector-java-5.0.8-bin.jar
+└── mysql-connector-java-5.1.20-bin.jar
 
