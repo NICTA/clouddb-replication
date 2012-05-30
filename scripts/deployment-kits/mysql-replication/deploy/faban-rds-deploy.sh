@@ -37,6 +37,9 @@ NUM_OF_USER=${4}
 NUM_OF_SCALE=${4}
 NUM_OF_POOL_SIZE=-1
 
+DATABASE_USER=olio
+DATABASE_PASSWORD=olioolio
+
 # The WRITE_INTERVAL defines the frequency of updating the heartbeats table 
 # in milliseconds unit
 WRITE_INTERVAL=1000
@@ -98,7 +101,9 @@ deploy_master_faban()
   perl -p -i -e "s/#NUM_OF_POOL_SIZE#/$NUM_OF_POOL_SIZE/" run.xml.OlioDriver && \
   perl -p -i -e "s/#WRITE_INTERVAL#/$WRITE_INTERVAL/" run.xml.OlioDriver && \
   perl -p -i -e "s/#READ_INTERVAL#/$READ_INTERVAL/" run.xml.OlioDriver && \
-  perl -p -i -e "s/#DATABASE_HOST#/$db_host_list/" run.xml.OlioDriver && \
+  perl -p -i -e "s/#DATABASE_HOST#/ /" run.xml.OlioDriver && \
+  perl -p -i -e "s/#DATABASE_USER#/$DATABASE_USER/" run.xml.OlioDriver && \
+  perl -p -i -e "s/#DATABASE_PASSWORD#/$DATABASE_PASSWORD/" run.xml.OlioDriver && \
   perl -p -i -e "s/#NUM_OF_AGENT#/$num_agent/" run.xml.OlioDriver && \
   ###
   # The following three lines for replacing

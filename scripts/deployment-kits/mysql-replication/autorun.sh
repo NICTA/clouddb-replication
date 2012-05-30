@@ -49,8 +49,12 @@
 #       http://www.opensparc.net/sunsource/faban/www/1.0/docs/howdoi/loadvariation.html
 #   iv. Match replication heartbeat with heartbeat interval in CloudDB 
 #       Autoadmin configure.
-# 6. To use SQL data deploy, you need to specify MYSQL_DATA_SOURCE in 
-#    *-sql-data-deploy.sh  
+#6. To use SQL data deploy, you need to specify MYSQL_DATA_SOURCE in 
+#   deploy/mysql-sql-*-deploy.sh  
+#7. To specify database user name and password, you need to change them in
+#   deploy/faban-*-deploy.sh
+#   post/mysql-heartbeatset.sh
+#   ../supports/heartbeat/heartbeat.sh
 
 LOCATION=`pwd`
 
@@ -73,6 +77,13 @@ MYSQL_INSTANCE_PAUSE=("MYSQL3.us-west-1.compute.amazonaws.com")
 NUM_OF_USERS=("15" "30" "45" "60" "75" "85" "95" "110" "125" "140" "155")
 ARCHIVE_PATH="Downloads"
 STEP=1
+
+# PLATFORM can use "ec2" or "rds"
+# DATA_FORMAT can use "sql" or "raw"
+# The combination should be "rds-sql" or "ec2-sql" or "ec2-raw",
+# There is NO "rds-raw"
+PLATFORM=ec2
+DATA_FORMAT=sql
 
 echo "Experiments start at `date`"
 rm ~/.ssh/known_hosts > /dev/null 2>&1
@@ -112,10 +123,9 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
 		
 		echo ".. (1/3) Deploy Faban and MySQL instances for ${NUM_OF_USERS[$i]} concurrent users"
         echo "Start deploying Faban instance (1/2)"
-		cd "$LOCATION/deploy" && ./faban-deploy.sh "$faban_instance_all" "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+		cd "$LOCATION/deploy" && ./faban-${PLATFORM}-deploy.sh "$faban_instance_all" "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} > /dev/null 2>&1
         echo "Start deploying MySQL instance (2/2)"
-		cd "$LOCATION/deploy" && ./mysql-raw-data-deploy.sh "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} > /dev/null 2>&1
-		#cd "$LOCATION/deploy" && ./mysql-sql-data-deploy.sh "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+		cd "$LOCATION/deploy" && ./mysql-${DATA_FORMAT}-${PLATFORM}-deploy.sh "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} > /dev/null 2>&1
 		check_errs $? "Deploy instances failed."
 		
 		# Start test from command line
@@ -125,6 +135,9 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
 			&& ~/faban/bin/fabancli submit OlioDriver dbadmin ~/faban/config/profiles/dbadmin/run.xml.OlioDriver"`
 		status=`ssh root@${FABAN_INSTANCE[0]} "~/faban/bin/fabancli status $task_name"`
 		echo ".. (2/3) Start a new benchmark as $task_name, in the status of $status"
+		if [ "$PLATFORM" == "rds" -a "$status" == "STARTED" ]; then
+			cd "$LOCATION/../supports/heartbeat" && ./heartbeat.sh ${MYSQL_INSTANCE_RUN[0]} &
+		fi
 		while [ "$status" == "STARTED" ]; do
 			for ((t=0; t<30; t++)) do
 				printf ".";
@@ -142,7 +155,10 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
         echo "Start downloading result set from Faban (1/2)"
 		cd "$LOCATION/post" && ./faban-resultset.sh "${FABAN_INSTANCE[0]}" $task_name $ARCHIVE_PATH > /dev/null 2>&1
         echo "Start downloading result set from MySQL (2/2)"
-		cd "$LOCATION/post" && ./mysql-resultset.sh "$mysql_instance_run" $task_name $ARCHIVE_PATH > /dev/null 2>&1
+		if [ "$PLATFORM" == "rds" ]; then
+			cd "$LOCATION/post" && ./mysql-heartbeatset.sh "$mysql_instance_all" $task_name $ARCHIVE_PATH > /dev/null 2>&1
+		fi
+		cd "$LOCATION/post" && ./mysql-resultset.sh "$mysql_instance_all" $task_name $ARCHIVE_PATH > /dev/null 2>&1
 		time=`date +"%s"`
 		archive="OlioDriver_${mysql_instance_s}Database_${NUM_OF_USERS[$i]}User_${time}"
 		mv ~/$ARCHIVE_PATH/$task_name ~/$ARCHIVE_PATH/$archive

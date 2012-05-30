@@ -18,12 +18,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#Script to collect MySQL logs.
+#Script to collect MySQL heartbeats.
 
 if [ "${#}" -lt "3" ]
 then
   echo "This script takes addresses of MySQL instances and name "
-  echo "of task and archive path to download result sets."
+  echo "of task and archive path to download heatbeat result sets."
   echo ""
   echo "Usage:"
   echo "   ${0} [MySQL] [Taks_Name] [Archive_Path]"
@@ -33,6 +33,8 @@ fi
 MYSQL_INSTANCE="${1}"
 TASK_NAME="${2}"
 ARCHIVE_PATH="${3}"
+RDS_USER=olio
+RDS_PASSWORD=olioolio
 
 check_errs()
 {
@@ -45,20 +47,15 @@ check_errs()
   fi
 }
 
-download_logs()
+download_heartbeats()
 {
-  host_name=`ssh root@$1 "hostname"`
-  # Archive MySQL logs
-  ssh root@$1 "mv /usr/local/mysql/data/mysql-slow.log /usr/local/mysql/data/mysql-slow.log.$host_name" > /dev/null
-  ssh root@$1 "/etc/init.d/mysql.server stop \
-                   && cd /usr/local/mysql/data/ \
-                   && tar -jvcf mysql_log.tar.bz2.$host_name mysql-slow.log.$host_name *-bin.*" > /dev/null
-  scp root@$1:/usr/local/mysql/data/mysql_log.tar.bz2.$host_name ~/$ARCHIVE_PATH/$TASK_NAME/mysql_log.tar.bz2.$host_name > /dev/null
-  check_errs $? "Download MySQL slow log failed from $1."
+  mysql -u${RDS_USER} -p${RDS_PASSWORD} -h $1 -e \
+  "SELECT * FROM heartbeats.heartbeats;" > ~/$ARCHIVE_PATH/$TASK_NAME/mysql_heartbeats.$1
+  check_errs $? "Download MySQL heartbeats failed from $1."
 }
 
 # Download result set
 for mysql in $MYSQL_INSTANCE; do
-  download_logs $mysql &
+  download_heartbeats $mysql &
 done
 wait
