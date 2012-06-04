@@ -25,18 +25,18 @@
 #Heartbeats tables are separated in two databases. And Heartbeats records
 #timestamps in microsecond granularity.
 
-if [ "${#}" -lt "1" ]; then
+if [ "${#}" -lt "3" ]; then
   echo "This script send a heartbeat to MySQL master database every second. " 
   echo ""
   echo "Usage:"
-  echo "   ${0} [MySQL]"
+  echo "   ${0} [MySQL] [DATABASE_USER] [DATABASE_PASSWORD]"
   exit 0
 fi
 
 MASTER_INSTANCE="${1}"
 
-RDS_USER=olio
-RDS_PASSWORD=olioolio
+DATABASE_USER=${2}
+DATABASE_PASSWORD=${3}
 RAMP_UP=600
 STEADY_STAGE=1200
 
@@ -44,8 +44,8 @@ master_mysql=$MASTER_INSTANCE
 
 generate_heartbeat()
 {
-  mysql -u${RDS_USER} -p${RDS_PASSWORD} -h $1 -e \
-  "INSERT INTO heartbeats(sys_mill, db_micro) VALUES (`date +%s000000`, sysdate()) /* HeartbeatOperation */;"
+  mysql -u${DATABASE_USER} -p${DATABASE_PASSWORD} -h $1 -e \
+  "INSERT INTO heartbeats.heartbeats(sys_mill, db_micro) VALUES (`date +%s000000`, sysdate()) /* HeartbeatOperation */;"
 }
 
 # Run heartbeat

@@ -20,37 +20,40 @@
 #
 #Script to deploy and config MySQL and Faban with specified workloads
 
-if [ "${#}" -lt "3" ]; then
-  echo "This script takes addresses of MySQL instances, as well as number "
+if [ "${#}" -lt "5" ]; then
+  echo "This script takes addresses of MySQL instances, "
+  echo "database user name and password, as well as number "
   echo "of concurrent users to deploy the test environment."
   echo ""
   echo "Usage:"
-  echo "   ${0} [MySQL Running] [MySQL Paused] [Num_User]"
+  echo "   ${0} [MySQL Running] [MySQL Paused] [Num_User] [DATABASE_USER] [DATABASE_PASSWORD]"
   exit 0
 fi
 
 MYSQL_INSTANCE_RUN="${1}"
 MYSQL_INSTANCE_PAUSE="${2}"
-MYSQL_DATA_SOURCE="ec2-50-18-133-245.us-west-1.compute.amazonaws.com"
+MYSQL_DATA_SOURCE="SOURCE.us-west-1.compute.amazonaws.com"
 NUM_OF_USER=${3}
 NUM_OF_SCALE=${3}
 
-RDS_USER=olio
-RDS_PASSWORD=olioolio
+DATABASE_USER=${4}
+DATABASE_PASSWORD=${5}
 DIST_FOLDER=/root/mysql-data
 
 deploy_database()
 {
+  mysql -u${DATABASE_USER} -p${DATABASE_PASSWORD} -h $1 -e "PURGE BINARY LOGS BEFORE '`date +\"%Y-%m-%d %H:%M:%S\"`';"
+
   # Drop exisiting databases
-  mysql -u${RDS_USER} -p${RDS_PASSWORD} -h $1 -e "DROP DATABASE olio;"
-  mysql -u${RDS_USER} -p${RDS_PASSWORD} -h $1 -e "DROP DATABASE heartbeats;"
+  mysql -u${DATABASE_USER} -p${DATABASE_PASSWORD} -h $1 -e "DROP DATABASE olio;"
+  mysql -u${DATABASE_USER} -p${DATABASE_PASSWORD} -h $1 -e "DROP DATABASE heartbeats;"
 
   # Create databases
-  mysql -u${RDS_USER} -p${RDS_PASSWORD} -h $1 -e "CREATE DATABASE IF NOT EXISTS olio;"
-  mysql -u${RDS_USER} -p${RDS_PASSWORD} -h $1 -e "CREATE DATABASE IF NOT EXISTS heartbeats;"
-  mysql -u${RDS_USER} -p${RDS_PASSWORD} -h $1 -e \
+  mysql -u${DATABASE_USER} -p${DATABASE_PASSWORD} -h $1 -e "CREATE DATABASE IF NOT EXISTS olio;"
+  mysql -u${DATABASE_USER} -p${DATABASE_PASSWORD} -h $1 -e "CREATE DATABASE IF NOT EXISTS heartbeats;"
+  mysql -u${DATABASE_USER} -p${DATABASE_PASSWORD} -h $1 -e \
   "CREATE TABLE IF NOT EXISTS heartbeats.heartbeats(sys_mill CHAR(26), db_micro CHAR(26)) ENGINE = MEMORY;"
-  mysql -u${RDS_USER} -p${RDS_PASSWORD} -h $1 -e \
+  mysql -u${DATABASE_USER} -p${DATABASE_PASSWORD} -h $1 -e \
   "ALTER TABLE heartbeats.heartbeats ADD id INT PRIMARY KEY AUTO_INCREMENT;"
 }
 
@@ -60,7 +63,7 @@ deploy_master_database()
 
   # Import SQL dump from source to the master
   scp root@$MYSQL_DATA_SOURCE:$DIST_FOLDER/olio-$2.sql.gz /var/tmp/olio.sql.gz
-  gunzip < /var/tmp/olio.sql.gz | mysql -u${RDS_USER} -p${RDS_PASSWORD} -h $1
+  gunzip < /var/tmp/olio.sql.gz | mysql -u${DATABASE_USER} -p${DATABASE_PASSWORD} -h $1
 }
 
 # Deploy MySQL instance

@@ -38,8 +38,6 @@
 #2. The MYSQL_INSTANCE_PAUSE is used for CloudDB AutoAdmin, it is suggested 
 #   to kept it commented or empty if you only need to run our benchmark.
 #3. 7-zip is pre-required for the data archieve.
-#4. Edit interval-write value at the end of run.xml.OlioDriver file
-#   to have customized replication heartbeat.
 #5. To integerated with CloudDB AutoAdmin, you have to enable 
 #   i.  MYSQL_INSTANCE_PAUSE in this file
 #   ii. Replace JDBC driver in the middle, and PROXY_ADDRESS_PORT at the 
@@ -49,12 +47,13 @@
 #       http://www.opensparc.net/sunsource/faban/www/1.0/docs/howdoi/loadvariation.html
 #   iv. Match replication heartbeat with heartbeat interval in CloudDB 
 #       Autoadmin configure.
+#4. To change replication heartbeat frequency, edit interval-write value in 
+#   deploy/faban-deploy.sh
+#5. To use MySQL build-in time/date function, edit interval-read value to 
+#   negative, or use positive for customized time/date function in 
+#   deploy/faban-deploy.sh
 #6. To use SQL data deploy, you need to specify MYSQL_DATA_SOURCE in 
-#   deploy/mysql-sql-*-deploy.sh  
-#7. To specify database user name and password, you need to change them in
-#   deploy/faban-*-deploy.sh
-#   post/mysql-heartbeatset.sh
-#   ../supports/heartbeat/heartbeat.sh
+#   deploy/mysql-sql-deploy.sh
 
 LOCATION=`pwd`
 
@@ -82,8 +81,11 @@ STEP=1
 # DATA_FORMAT can use "sql" or "raw"
 # The combination should be "rds-sql" or "ec2-sql" or "ec2-raw",
 # There is NO "rds-raw"
-PLATFORM=ec2
 DATA_FORMAT=sql
+PLATFORM=ec2
+
+DATABASE_USER=olio
+DATABASE_PASSWORD=olio
 
 echo "Experiments start at `date`"
 rm ~/.ssh/known_hosts > /dev/null 2>&1
@@ -109,6 +111,7 @@ cd "$LOCATION/update" && ./faban-update.sh "$faban_instance_all" > /dev/null 2>&
 echo "Start installing MySQL instance (2/2)"
 cd "$LOCATION/install" && ./mysql-install.sh "$mysql_instance_all" > /dev/null 2>&1
 cd "$LOCATION/update" && ./mysql-update.sh "$mysql_instance_all" > /dev/null 2>&1
+cd "$LOCATION/update" && ./mysql-${DATA_FORMAT}-${PLATFORM}-update.sh "$mysql_instance_run" "$mysql_instance_pause" > /dev/null 2>&1
 check_errs $? "Install instances failed."
 
 for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
@@ -123,9 +126,9 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
 		
 		echo ".. (1/3) Deploy Faban and MySQL instances for ${NUM_OF_USERS[$i]} concurrent users"
         echo "Start deploying Faban instance (1/2)"
-		cd "$LOCATION/deploy" && ./faban-${PLATFORM}-deploy.sh "$faban_instance_all" "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+		cd "$LOCATION/deploy" && ./faban-deploy.sh "$faban_instance_all" "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} $DATABASE_USER $DATABASE_PASSWORD > /dev/null 2>&1
         echo "Start deploying MySQL instance (2/2)"
-		cd "$LOCATION/deploy" && ./mysql-${DATA_FORMAT}-${PLATFORM}-deploy.sh "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} > /dev/null 2>&1
+		cd "$LOCATION/deploy" && ./mysql-${DATA_FORMAT}-deploy.sh "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} $DATABASE_USER $DATABASE_PASSWORD > /dev/null 2>&1
 		check_errs $? "Deploy instances failed."
 		
 		# Start test from command line
@@ -136,7 +139,7 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
 		status=`ssh root@${FABAN_INSTANCE[0]} "~/faban/bin/fabancli status $task_name"`
 		echo ".. (2/3) Start a new benchmark as $task_name, in the status of $status"
 		if [ "$PLATFORM" == "rds" -a "$status" == "STARTED" ]; then
-			cd "$LOCATION/../supports/heartbeat" && ./heartbeat.sh ${MYSQL_INSTANCE_RUN[0]} &
+			cd "$LOCATION/../supports/heartbeat" && ./heartbeat.sh ${MYSQL_INSTANCE_RUN[0]} $DATABASE_USER $DATABASE_PASSWORD &
 		fi
 		while [ "$status" == "STARTED" ]; do
 			for ((t=0; t<30; t++)) do
@@ -156,7 +159,7 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
 		cd "$LOCATION/post" && ./faban-resultset.sh "${FABAN_INSTANCE[0]}" $task_name $ARCHIVE_PATH > /dev/null 2>&1
         echo "Start downloading result set from MySQL (2/2)"
 		if [ "$PLATFORM" == "rds" ]; then
-			cd "$LOCATION/post" && ./mysql-heartbeatset.sh "$mysql_instance_all" $task_name $ARCHIVE_PATH > /dev/null 2>&1
+			cd "$LOCATION/post" && ./mysql-heartbeatset.sh "$mysql_instance_all" $task_name $ARCHIVE_PATH $DATABASE_USER $DATABASE_PASSWORD > /dev/null 2>&1
 		fi
 		cd "$LOCATION/post" && ./mysql-resultset.sh "$mysql_instance_all" $task_name $ARCHIVE_PATH > /dev/null 2>&1
 		time=`date +"%s"`

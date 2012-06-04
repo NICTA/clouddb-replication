@@ -20,21 +20,21 @@
 #
 #Script to collect MySQL heartbeats.
 
-if [ "${#}" -lt "3" ]
+if [ "${#}" -lt "5" ]
 then
   echo "This script takes addresses of MySQL instances and name "
   echo "of task and archive path to download heatbeat result sets."
   echo ""
   echo "Usage:"
-  echo "   ${0} [MySQL] [Taks_Name] [Archive_Path]"
+  echo "   ${0} [MySQL] [Taks_Name] [Archive_Path] [DATABASE_USER] [DATABASE_PASSWORD]"
   exit 0;
 fi
 
 MYSQL_INSTANCE="${1}"
 TASK_NAME="${2}"
 ARCHIVE_PATH="${3}"
-RDS_USER=olio
-RDS_PASSWORD=olioolio
+DATABASE_USER=${4}
+DATABASE_PASSWORD=${5}
 
 check_errs()
 {
@@ -49,7 +49,7 @@ check_errs()
 
 download_heartbeats()
 {
-  mysql -u${RDS_USER} -p${RDS_PASSWORD} -h $1 -e \
+  mysql -u${DATABASE_USER} -p${DATABASE_PASSWORD} -h $1 -e \
   "SELECT * FROM heartbeats.heartbeats;" > ~/$ARCHIVE_PATH/$TASK_NAME/mysql_heartbeats.$1
   check_errs $? "Download MySQL heartbeats failed from $1."
 }

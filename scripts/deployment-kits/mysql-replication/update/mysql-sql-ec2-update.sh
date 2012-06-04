@@ -20,22 +20,20 @@
 #
 #Script to deploy and config MySQL and Faban with specified workloads
 
-if [ "${#}" -lt "3" ]; then
+if [ "${#}" -lt "2" ]; then
   echo "This script takes addresses of MySQL instances, as well as number "
   echo "of concurrent users to deploy the test environment."
   echo ""
   echo "Usage:"
-  echo "   ${0} [MySQL Running] [MySQL Paused] [Num_User]"
+  echo "   ${0} [MySQL Running] [MySQL Paused]"
   exit 0
 fi
 
 MYSQL_INSTANCE_RUN="${1}"
 MYSQL_INSTANCE_PAUSE="${2}"
-MYSQL_DATA_SOURCE="SOURCE.us-west-1.compute.amazonaws.com"
-NUM_OF_USER=${3}
-NUM_OF_SCALE=${3}
-MYSQL_M_CONF=my-sql.cnf/rds-like.cnf.m1.large
-MYSQL_CONF=my-sql.cnf/rds-like.cnf.m1.small
+
+MYSQL_M_CONF=mysql-sql.cnf/rds-like.cnf.m1.large
+MYSQL_CONF=mysql-sql.cnf/rds-like.cnf.m1.small
 
 REPL_PASSWORD=password
 DIST_FOLDER=/root/mysql-data
@@ -99,9 +97,6 @@ deploy_master_database()
 
   # Error log link
   ssh root@$1 "ln -s /usr/local/mysql/data/\`hostname\`.err /usr/local/mysql/data/$mysql.err"
-  # Import SQL dump from source to the master
-  ssh root@$1 "scp root@$MYSQL_DATA_SOURCE:$DIST_FOLDER/olio-$2.sql.gz /var/tmp/olio.sql.gz"
-  ssh root@$1 "gunzip < /var/tmp/olio.sql.gz | mysql -u root"
 }
 
 # Deploy MySQL instance
@@ -109,26 +104,20 @@ num_mysql=0
 for mysql in $MYSQL_INSTANCE_RUN; do
   num_mysql=$[$num_mysql+1]
 
-  if [ "$NUM_OF_USER" -eq "1" ]; then
-    num_scale=50
-  else
-    num_scale=$NUM_OF_SCALE
-  fi
-
   if [ "$num_mysql" -eq "1" ]; then
     # Initializing MySQL databases
     master_mysql=$mysql
     # Copying my.cnf
-    cp ./mysql-conf/$MYSQL_M_CONF my-sql_$num_mysql
+    cp ./$MYSQL_M_CONF my-sql_$num_mysql
     perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql
     perl -p -i -e "s/#log_bin/log_bin/" my-sql_$num_mysql
     perl -p -i -e "s/#binlog-format/binlog-format/" my-sql_$num_mysql
     scp -r my-sql_$num_mysql root@$mysql:/etc/my.cnf
     rm my-sql_$num_mysql
-    deploy_master_database $master_mysql $num_scale &
+    deploy_master_database $master_mysql &
   else
     # Copying my.cnf
-    cp ./mysql-conf/$MYSQL_CONF my-sql_$num_mysql
+    cp ./$MYSQL_CONF my-sql_$num_mysql
     perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql
     scp -r my-sql_$num_mysql root@$mysql:/etc/my.cnf
     rm my-sql_$num_mysql
@@ -144,13 +133,6 @@ for mysql in $MYSQL_INSTANCE_PAUSE; do
   scp -r my-sql_$num_mysql root@$mysql:/etc/my.cnf
   rm my-sql_$num_mysql
 
-  if [ "$NUM_OF_USER" -eq "1" ]; then
-    num_scale=50
-  else
-    num_scale=$NUM_OF_SCALE
-  fi
   deploy_paused_slave_database $mysql $master_mysql &
 done
 wait
-# Sleep $NUM_OF_SCALE seconds so that data can be synced
-sleep $(( $NUM_OF_SCALE / 2 ))

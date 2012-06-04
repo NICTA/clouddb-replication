@@ -20,13 +20,13 @@
 #
 #Script to deploy and config MySQL and Faban with specified workloads
 
-if [ "${#}" -lt "4" ]; then
-  echo "This script takes addresses of Faban and MySQL instances, as"
-  echo "well as number of Thin servers and concurrent users to deploy "
-  echo "the test environment."
+if [ "${#}" -lt "6" ]; then
+  echo "This script takes addresses of Faban and MySQL instances, "
+  echo "database user name and password, as well as number of "
+  echo "concurrent users to deploy the test environment."
   echo ""
   echo "Usage:"
-  echo "   ${0} [Faban] [MySQL Running] [MySQL Paused] [Num_User]"
+  echo "   ${0} [Faban] [MySQL Running] [MySQL Paused] [Num_User] [DATABASE_USER] [DATABASE_PASSWORD]"
   exit 0
 fi
 
@@ -37,8 +37,8 @@ NUM_OF_USER=${4}
 NUM_OF_SCALE=${4}
 NUM_OF_POOL_SIZE=-1
 
-DATABASE_USER=olio
-DATABASE_PASSWORD=olioolio
+DATABASE_USER=${5}
+DATABASE_PASSWORD=${6}
 
 # The WRITE_INTERVAL defines the frequency of updating the heartbeats table 
 # in milliseconds unit
@@ -101,7 +101,7 @@ deploy_master_faban()
   perl -p -i -e "s/#NUM_OF_POOL_SIZE#/$NUM_OF_POOL_SIZE/" run.xml.OlioDriver && \
   perl -p -i -e "s/#WRITE_INTERVAL#/$WRITE_INTERVAL/" run.xml.OlioDriver && \
   perl -p -i -e "s/#READ_INTERVAL#/$READ_INTERVAL/" run.xml.OlioDriver && \
-  perl -p -i -e "s/#DATABASE_HOST#/ /" run.xml.OlioDriver && \
+  perl -p -i -e "s/#DATABASE_HOST#/$db_host_list/" run.xml.OlioDriver && \
   perl -p -i -e "s/#DATABASE_USER#/$DATABASE_USER/" run.xml.OlioDriver && \
   perl -p -i -e "s/#DATABASE_PASSWORD#/$DATABASE_PASSWORD/" run.xml.OlioDriver && \
   perl -p -i -e "s/#NUM_OF_AGENT#/$num_agent/" run.xml.OlioDriver && \
