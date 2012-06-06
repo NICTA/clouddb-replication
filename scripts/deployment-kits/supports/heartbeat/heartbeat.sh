@@ -45,7 +45,7 @@ master_mysql=$MASTER_INSTANCE
 generate_heartbeat()
 {
   mysql -u${DATABASE_USER} -p${DATABASE_PASSWORD} -h $1 -e \
-  "INSERT INTO heartbeats.heartbeats(sys_mill, db_micro) VALUES (`date +%s000000`, sysdate()) /* HeartbeatOperation */;"
+  "SET SESSION binlog_format = 'STATEMENT'; INSERT INTO heartbeats.heartbeats(sys_mill, db_micro) VALUES (`date +%s000000`, sysdate()) /* HeartbeatOperation */;"
 }
 
 # Run heartbeat
