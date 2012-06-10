@@ -50,7 +50,7 @@ install_faban_sys()
   
   # Install ethtool to make nicstat work
   ssh root@$1 "apt-get update \
-  && aptitude -y install install ethtool"
+  && aptitude -y install ethtool"
 
   # Update hosts file in /etc
   ssh root@$1 'echo -e `wget -qO - http://icanhazip.com/` \\t `hostname` >> /etc/hosts'
@@ -70,6 +70,8 @@ install_database_sys()
   enable_time_sync $1
 }
 
+apt-get update \
+&& aptitude -y install mysql-client
 # Setup MySQL instance
 for mysql in $MYSQL_INSTANCE; do
   install_database_sys $mysql > /dev/null &

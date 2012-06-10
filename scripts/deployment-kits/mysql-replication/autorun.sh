@@ -111,8 +111,8 @@ cd "$LOCATION/update" && ./faban-update.sh "$faban_instance_all" > /dev/null 2>&
 echo "Start installing MySQL instance (2/2)"
 cd "$LOCATION/install" && ./mysql-install.sh "$mysql_instance_all" > /dev/null 2>&1
 cd "$LOCATION/update" && ./mysql-update.sh "$mysql_instance_all" > /dev/null 2>&1
-cd "$LOCATION/update" && ./mysql-${DATA_FORMAT}-${PLATFORM}-update.sh "$mysql_instance_run" "$mysql_instance_pause" > /dev/null 2>&1
 check_errs $? "Install instances failed."
+cd "$LOCATION/update" && ./mysql-${DATA_FORMAT}-${PLATFORM}-update.sh "$mysql_instance_all" > /dev/null 2>&1
 
 for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
 	mysql_instance_run=${MYSQL_INSTANCE_RUN[0]}
@@ -126,7 +126,7 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
 		
 		echo ".. (1/3) Deploy Faban and MySQL instances for ${NUM_OF_USERS[$i]} concurrent users"
         echo "Start deploying Faban instance (1/2)"
-		cd "$LOCATION/deploy" && ./faban-deploy.sh "$faban_instance_all" "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} $DATABASE_USER $DATABASE_PASSWORD > /dev/null 2>&1
+		cd "$LOCATION/deploy" && ./faban-deploy.sh $DATA_FORMAT "$faban_instance_all" "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} $DATABASE_USER $DATABASE_PASSWORD > /dev/null 2>&1
         echo "Start deploying MySQL instance (2/2)"
 		cd "$LOCATION/deploy" && ./mysql-${DATA_FORMAT}-deploy.sh "$mysql_instance_run" "$mysql_instance_pause" ${NUM_OF_USERS[$i]} $DATABASE_USER $DATABASE_PASSWORD > /dev/null 2>&1
 		check_errs $? "Deploy instances failed."
@@ -138,7 +138,7 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
 			&& ~/faban/bin/fabancli submit OlioDriver dbadmin ~/faban/config/profiles/dbadmin/run.xml.OlioDriver"`
 		status=`ssh root@${FABAN_INSTANCE[0]} "~/faban/bin/fabancli status $task_name"`
 		echo ".. (2/3) Start a new benchmark as $task_name, in the status of $status"
-		if [ "$PLATFORM" == "rds" -a "$status" == "STARTED" ]; then
+		if [ "$DATA_FORMAT" == "sql" -a "$status" == "STARTED" ]; then
 			cd "$LOCATION/../supports/heartbeat" && ./heartbeat.sh ${MYSQL_INSTANCE_RUN[0]} $DATABASE_USER $DATABASE_PASSWORD &
 		fi
 		while [ "$status" == "STARTED" ]; do
@@ -158,7 +158,7 @@ for ((k=${#MYSQL_INSTANCE_RUN[*]}; k>=1; k=$[$k-$STEP])) do
         echo "Start downloading result set from Faban (1/2)"
 		cd "$LOCATION/post" && ./faban-resultset.sh "${FABAN_INSTANCE[0]}" $task_name $ARCHIVE_PATH > /dev/null 2>&1
         echo "Start downloading result set from MySQL (2/2)"
-		if [ "$PLATFORM" == "rds" ]; then
+		if [ "$DATA_FORMAT" == "sql" ]; then
 			cd "$LOCATION/post" && ./mysql-heartbeatset.sh "$mysql_instance_all" $task_name $ARCHIVE_PATH $DATABASE_USER $DATABASE_PASSWORD > /dev/null 2>&1
 		fi
 		cd "$LOCATION/post" && ./mysql-resultset.sh "$mysql_instance_all" $task_name $ARCHIVE_PATH > /dev/null 2>&1

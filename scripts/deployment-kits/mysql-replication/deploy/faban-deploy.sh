@@ -20,25 +20,26 @@
 #
 #Script to deploy and config MySQL and Faban with specified workloads
 
-if [ "${#}" -lt "6" ]; then
+if [ "${#}" -lt "7" ]; then
   echo "This script takes addresses of Faban and MySQL instances, "
   echo "database user name and password, as well as number of "
   echo "concurrent users to deploy the test environment."
   echo ""
   echo "Usage:"
-  echo "   ${0} [Faban] [MySQL Running] [MySQL Paused] [Num_User] [DATABASE_USER] [DATABASE_PASSWORD]"
+  echo "   ${0} [Faban] [DATA_FORMAT] [MySQL Running] [MySQL Paused] [Num_User] [DATABASE_USER] [DATABASE_PASSWORD]"
   exit 0
 fi
 
-FABAN_INSTANCE="${1}"
-MYSQL_INSTANCE_RUN="${2}"
-MYSQL_INSTANCE_PAUSE="${3}"
-NUM_OF_USER=${4}
-NUM_OF_SCALE=${4}
+DATA_FORMAT=${1}
+FABAN_INSTANCE="${2}"
+MYSQL_INSTANCE_RUN="${3}"
+MYSQL_INSTANCE_PAUSE="${4}"
+NUM_OF_USER=${5}
+NUM_OF_SCALE=${5}
 NUM_OF_POOL_SIZE=-1
 
-DATABASE_USER=${5}
-DATABASE_PASSWORD=${6}
+DATABASE_USER=${6}
+DATABASE_PASSWORD=${7}
 
 # The WRITE_INTERVAL defines the frequency of updating the heartbeats table 
 # in milliseconds unit
@@ -69,15 +70,20 @@ deploy_master_faban()
 {
   # Prepare profile for Faban master
   num_host_list=0
-  for mysql in $MYSQL_INSTANCE_RUN; do
-    db_host_list=$db_host_list"$mysql "
-    num_host_list=$[$num_host_list+1]
-  done
-  for mysql in $MYSQL_INSTANCE_PAUSE; do
-    db_host_list=$db_host_list"$mysql "
-    num_host_list=$[$num_host_list+1]
-  done
-  db_host_list=`echo $db_host_list | sed -e 's/,$//'`
+  if [ "$DATA_FORMAT" == "raw" ]; then
+	for mysql in $MYSQL_INSTANCE_RUN; do
+	  db_host_list=$db_host_list"$mysql "
+	  num_host_list=$[$num_host_list+1]
+	done
+	for mysql in $MYSQL_INSTANCE_PAUSE; do
+	  db_host_list=$db_host_list"$mysql "
+	  num_host_list=$[$num_host_list+1]
+	done
+	db_host_list=`echo $db_host_list | sed -e 's/,$//'`
+  else
+	db_host_list=" "
+  fi
+
 
   for mysql in $MYSQL_INSTANCE_RUN; do
     db_serv_list=$db_serv_list"$mysql,"

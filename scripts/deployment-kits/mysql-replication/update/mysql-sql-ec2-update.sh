@@ -20,17 +20,16 @@
 #
 #Script to deploy and config MySQL and Faban with specified workloads
 
-if [ "${#}" -lt "2" ]; then
+if [ "${#}" -lt "1" ]; then
   echo "This script takes addresses of MySQL instances, as well as number "
   echo "of concurrent users to deploy the test environment."
   echo ""
   echo "Usage:"
-  echo "   ${0} [MySQL Running] [MySQL Paused]"
+  echo "   ${0} [MySQL Instances]"
   exit 0
 fi
 
-MYSQL_INSTANCE_RUN="${1}"
-MYSQL_INSTANCE_PAUSE="${2}"
+MYSQL_INSTANCE="${1}"
 
 MYSQL_M_CONF=mysql-sql.cnf/rds-like.cnf.m1.large
 MYSQL_CONF=mysql-sql.cnf/rds-like.cnf.m1.small
@@ -50,7 +49,7 @@ deploy_database()
   && rm /var/tmp/mysql.tar.bz2"
 }
 
-deploy_running_slave_database()
+deploy_slave_database()
 {
   deploy_database $1
 
@@ -80,12 +79,6 @@ deploy_running_slave_database()
   ssh root@$1 "ln -s /usr/local/mysql/data/\`hostname\`.err /usr/local/mysql/data/$mysql.err"
 }
 
-deploy_paused_slave_database()
-{
-  deploy_running_slave_database $1 $2
-  ssh root@$1 "killall -w mysqld"
-}
-
 deploy_master_database()
 {
   deploy_database $1
@@ -101,7 +94,7 @@ deploy_master_database()
 
 # Deploy MySQL instance
 num_mysql=0
-for mysql in $MYSQL_INSTANCE_RUN; do
+for mysql in $MYSQL_INSTANCE; do
   num_mysql=$[$num_mysql+1]
 
   if [ "$num_mysql" -eq "1" ]; then
@@ -121,18 +114,7 @@ for mysql in $MYSQL_INSTANCE_RUN; do
     perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql
     scp -r my-sql_$num_mysql root@$mysql:/etc/my.cnf
     rm my-sql_$num_mysql
-    deploy_running_slave_database $mysql $master_mysql &
+    deploy_slave_database $mysql $master_mysql &
   fi
-done
-
-for mysql in $MYSQL_INSTANCE_PAUSE; do
-  num_mysql=$[$num_mysql+1]
-  # Copying my.cnf
-  cp ./mysql-conf/$MYSQL_CONF my-sql_$num_mysql
-  perl -p -i -e "s/#MYSQL_SERVER_ID#/$num_mysql/" my-sql_$num_mysql
-  scp -r my-sql_$num_mysql root@$mysql:/etc/my.cnf
-  rm my-sql_$num_mysql
-
-  deploy_paused_slave_database $mysql $master_mysql &
 done
 wait
